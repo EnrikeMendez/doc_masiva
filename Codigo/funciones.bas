@@ -1404,3 +1404,260 @@ Function valida_valor_mercancia(val_mercancia As String)
     
 	valida_valor_mercancia = res
 End Function
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Function es_captura_con_factura(ByVal num_client As String) As Boolean
+	Dim res As Boolean
+	Dim iConFactura, sqlConFactura, rs_capt
+
+	res = False
+	iConFactura = -1
+	sqlConFactura = ""
+	Set rs_capt = Nothing
+	Set rs_capt = New ADODB.Recordset
+	rs_capt.CursorLocation = adUseClient
+	rs_capt.CursorType = adOpenForwardOnly
+	rs_capt.LockType = adLockReadOnly
+	rs_capt.ActiveConnection = Db_link_orfeo
+
+	sqlConFactura = sqlConFactura & " SELECT	NVL(TIPO_DOCUMENTACION,-1) CON_FACTURA " & vbCrLf
+	sqlConFactura = sqlConFactura & " FROM		TB_CONFIG_CLIENTE_DIST " & vbCrLf
+	sqlConFactura = sqlConFactura & " WHERE		ID_CLIENTE	=	'" & num_client & "' " & vbCrLf
+
+	rs_capt.Open sqlConFactura
+    If Not rs_capt.EOF Then
+        iConFactura = CDbl(rs_capt.Fields(0))
+    End If
+    rs_capt.Close
+
+	If iConFactura = 1 Then
+		res = True
+	End If
+
+	es_captura_con_factura = res
+End Function
+Function es_captura_sin_factura(ByVal num_client As String) As Boolean
+	Dim res As Boolean
+	Dim iSinFactura, sqlSinFactura, rs_capt
+
+	res = False
+	iSinFactura = -1
+	sqlSinFactura = ""
+	Set rs_capt = Nothing
+	Set rs_capt = New ADODB.Recordset
+	rs_capt.CursorLocation = adUseClient
+	rs_capt.CursorType = adOpenForwardOnly
+	rs_capt.LockType = adLockReadOnly
+	rs_capt.ActiveConnection = Db_link_orfeo
+
+	sqlSinFactura = sqlSinFactura & " SELECT	NVL(TIPO_DOCUMENTACION,-1) SIN_FACTURA " & vbCrLf
+	sqlSinFactura = sqlSinFactura & " FROM		TB_CONFIG_CLIENTE_DIST " & vbCrLf
+	sqlSinFactura = sqlSinFactura & " WHERE		ID_CLIENTE	=	'" & num_client & "' " & vbCrLf
+
+	rs_capt.Open sqlSinFactura
+    If Not rs_capt.EOF Then
+        iSinFactura = CDbl(rs_capt.Fields(0))
+    End If
+    rs_capt.Close
+
+	If iSinFactura = 0 Then
+		res = True
+	End If
+
+	es_captura_sin_factura = res
+End Function
+Function es_captura_con_doc_fuente(ByVal num_client As String) As Boolean
+	Dim res As Boolean
+	Dim iConDocFuente, sqlConDocFuente, rs_capt
+	
+	res = False
+	iConDocFuente = -1
+	sqlConDocFuente = ""
+	Set rs_capt = Nothing
+	Set rs_capt = New ADODB.Recordset
+	rs_capt.CursorLocation = adUseClient
+	rs_capt.CursorType = adOpenForwardOnly
+	rs_capt.LockType = adLockReadOnly
+	rs_capt.ActiveConnection = Db_link_orfeo
+	
+	sqlConDocFuente = sqlConDocFuente & " SELECT	NVL(TIPO_DOCUMENTACION,-1) CON_DOCUMENTO_FUENTE " & vbCrLf
+	sqlConDocFuente = sqlConDocFuente & " FROM		TB_CONFIG_CLIENTE_DIST " & vbCrLf
+	sqlConDocFuente = sqlConDocFuente & " WHERE		ID_CLIENTE	=	'" & num_client & "' " & vbCrLf
+	
+	rs_capt.Open sqlConDocFuente
+    If Not rs_capt.EOF Then
+        iConDocFuente = CDbl(rs_capt.Fields(0))
+    End If
+    rs_capt.Close
+
+	If iConDocFuente = 2 Then
+		res = True
+	End If
+	
+	es_captura_con_doc_fuente = res
+End Function
+Function validar_destinatario(ByVal clave_destino_cliente As String, ByVal num_client As String) As Double
+	Dim res As Double
+    Dim SQL As String
+    Dim rs As New ADODB.Recordset
+
+    res = -1
+    SQL = ""
+    Set rs = New ADODB.Recordset
+    rs.CursorLocation = adUseClient
+    rs.CursorType = adOpenForwardOnly
+    rs.LockType = adLockBatchOptimistic
+    rs.ActiveConnection = Db_link_orfeo
+
+	SQL = SQL & " SELECT	CCL.CCLCLAVE CCLCLAVE " & vbCrLf
+	SQL = SQL & " FROM	EDIRECCION_ENTR_CLIENTE_LIGA DIL " & vbCrLf
+	SQL = SQL & " 	INNER	JOIN	EDIRECCIONES_ENTREGA DIE	ON	DIE.DIECLAVE	=	DIL.DEC_DIECLAVE " & vbCrLf
+	SQL = SQL & " 	INNER	JOIN	ECIUDADES CIU				ON	CIU.VILCLEF		=	DIE.DIEVILLE " & vbCrLf
+	SQL = SQL & " 	INNER	JOIN	EESTADOS EST				ON	EST.ESTESTADO	=	CIU.VIL_ESTESTADO " & vbCrLf
+	SQL = SQL & " 	INNER	JOIN	ECLIENT_CLIENTE CCL			ON	CCL.CCLCLAVE	=	DIE.DIE_CCLCLAVE " & vbCrLf
+	SQL = SQL & " 	INNER	JOIN	EDESTINOS_POR_RUTA DER		ON	DER.DER_VILCLEF	=	CIU.VILCLEF " & vbCrLf
+	SQL = SQL & " WHERE	1=1 " & vbCrLf
+	SQL = SQL & " 	AND	CCL.CCL_STATUS		=	1 " & vbCrLf
+	SQL = SQL & " 	AND	DIE.DIE_STATUS		=	1 " & vbCrLf
+	SQL = SQL & " 	AND	EST.EST_PAYCLEF		=	'N3' " & vbCrLf
+	SQL = SQL & " 	AND	DER.DER_ALLCLAVE	>	0 " & vbCrLf
+	SQL = SQL & " 	AND	SF_LOGIS_CLIENTE_RESTRIC(DIL.DEC_CLICLEF, DER.DER_TIPO_ENTREGA)	=	1 " & vbCrLf
+	SQL = SQL & " 	AND	DIL.DEC_NUM_DIR_CLIENTE	=	'" & clave_destino_cliente & "' " & vbCrLf
+	SQL = SQL & " 	AND	DIL.DEC_CLICLEF			=	'" & num_client & "' " & vbCrLf
+
+    On Error GoTo catch
+		rs.Open SQL
+		If Not rs.EOF Then
+			res = CDbl(rs.Fields("CCLCLAVE"))
+		End If
+catch:
+    rs.Close
+    Set rs = Nothing
+
+    validar_destinatario = res
+End Function
+Function tipo_tarifa_cliente(ByVal num_client As String) As String
+	On Error GoTo catch
+	
+	'PENDIENTE DE QUE EL EQUIPO ORACLE FORMS NOS COMAPRTA EL QUERY PARA VALIDAR EL TIPO DE TARIFA
+catch:
+	tipo_tarifa_cliente = ""
+End Function
+Function validar_bultos_totales(ByVal bultos_totales As Double, ByVal bultos_granel As Double, ByVal cantidad_tarimas As Double, ByVal bultos_constitutivos_tarimas As Double) As Boolean
+	Dim res As Boolean
+	On Error GoTo catch
+	
+	res = False
+	
+	If bultos_totales = (bultos_granel + cantidad_tarimas) Then
+		res = True
+	End If
+
+catch:
+	validar_bultos_totales = res
+End Function
+Function validar_cdad_bultos_granel(ByVal bultos_granel As String, ByVal num_client As String) As Boolean
+	Dim res As Boolean
+	Dim cdad_bultos As Double
+	Dim es_cliente_por_bulto As Boolean
+	On Error GoTo catch
+	
+	res = False
+	cdad_bultos = -1
+	
+	If tipo_tarifa_cliente(num_client) = "Bulto Constitutivo" Then
+		If bultos_granel <> "" Then
+			cdad_bultos = CDbl(bultos_granel)
+			
+			If cdad_bultos >= 0 Then
+				res = True
+			End If
+		End If
+	Else
+		If bultos_granel = "" Then
+			res = True
+		End If
+	End If
+	
+catch:
+	validar_cdad_bultos_granel = res
+End Function
+Function validar_cdad_tarimas(ByVal cdad_tarimas As String) As Boolean
+	Dim res As Boolean
+	Dim cdad_bultos As Double
+	On Error GoTo catch
+	
+	res = False
+	cdad_bultos = -1
+	
+	If cdad_tarimas <> "" Then
+		cdad_bultos = CDbl(cdad_tarimas)
+		
+		If cdad_bultos >= 0 Then
+			res = True
+		End If
+	End If
+	
+catch:
+	validar_cdad_tarimas = res
+End Function
+Function validar_bultos_por_tarima(ByVal cdad_bultos_tarima As String) As Boolean
+	Dim res As Boolean
+	Dim cdad_bultos As Double
+	On Error GoTo catch
+	
+	res = False
+	cdad_bultos = -1
+	
+	If cdad_bultos_tarima <> "" Then
+		cdad_bultos = CDbl(cdad_bultos_tarima)
+		
+		If cdad_bultos >= 0 Then
+			res = True
+		End If
+	Else
+		res = True
+	End If
+	
+catch:
+	validar_bultos_por_tarima = res
+End Function
+Function validar_valor_mercancia(ByVal valor_mercancia As String, ByVal num_client As String) As Boolean
+	Dim res As Boolean
+	Dim val_merc As Double
+	On Error GoTo catch
+	
+	res = False
+	val_merc = -1
+	
+	If cliente_con_seguro(num_client) = True Then
+		val_merc = CDbl(valor_mercancia)
+		
+		If val_merc >= 0 Then
+			res = True
+		End If
+	Else
+		res = True
+	End If
+	
+catch:
+	validar_valor_mercancia = res
+End Function
+Function validar_observaciones(ByVal txt_observaciones As String) As Boolean
+	Dim res As Boolean
+	Dim length As Double
+	On Error GoTo catch
+	
+	res = False
+	length = 0
+	
+	If txt_observaciones <> "" Then
+		length = len(txt_observaciones)
+	End If
+	
+	If length <= 80 Then
+		res = True
+	End If
+	
+catch:
+	validar_observaciones = res
+End Function
