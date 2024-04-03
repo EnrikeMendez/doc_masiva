@@ -15,12 +15,8 @@ Private rst2 As New ADODB.Recordset
 Private rst3 As New ADODB.Recordset
 Private rst4 As New ADODB.Recordset
 Private rsT5 As New ADODB.Recordset
-'Private rsT6 As New ADODB.Recordset
 Private rsT7 As New ADODB.Recordset
-
-'<-- CHG-DESA-05092022-01
 Private rsAVC As New ADODB.Recordset
-'CHG-DESA-05092022-01 -->
 
 Private tieneVAS As Boolean
 Private statusCancelado As Boolean
@@ -28,7 +24,6 @@ Private statusStandby As Boolean
 Private statusEntregado As Boolean
 
 Private catEstatus() As String
-
 Private arrInfoTalon() As String
 
 Private c As Integer, i As Integer, j As Integer, k As Integer
@@ -40,33 +35,29 @@ Private EstatusTalon As String, sNUI As String, stObservaciones As String
 Private incidencia As String, fecha_entrega As String, last_entrada As String, ObtieneInfoBDs As Boolean
 Dim tstResult As String
 
-'<<MRG:Concatenar los resultados del query en una cadena
+'Concatenar los resultados del query en una cadena
 Private rs_str As New ADODB.Recordset
 Private str_result As String
-'MRG>>
+
 
 '   '   '   '   '   '   '
 '   FUNCIÓN PRINCIPAL   '
 '   '   '   '   '   '   '
-'<CHG-DESA-30032022-01 : Función principal para obtener el estatus de la guía
 
+'Función principal para obtener el estatus de la guía
 ''' Obtiene el estatus a partir del seguimiento que se le da a un talón/factura LTL y CD'''
 Public Function ObtieneStatusTalon_txt(wTalonRastreo As String) As String
     On Error GoTo error_function
 
     'Inicialización de variables:
     Call init_var
+	
     tstResult = ""
-
-'    If wTalonRastreo = "0093503-3999-3B65" Then
-'        tstResult = ""
-'        Debug.Print (wTalonRastreo)
-'    End If
-
     stTexto = ""
     statusCancelado = EsGuiaCancelada(wTalonRastreo)
     statusStandby = GuiaEnStndBy(wTalonRastreo)
-    If statusCancelado <> True And statusStandby <> True Then
+    
+	If statusCancelado <> True And statusStandby <> True Then
         statusEntregado = GuiaEntregada(wTalonRastreo)
     End If
 
@@ -103,7 +94,6 @@ Public Function ObtieneStatusTalon_txt(wTalonRastreo As String) As String
 
             If CStr(tdCDclave) <> "" Then
                 arrTracking = obtenerTrackingTalon(tdCDclave)
-                'tstResult = tstResult & "|SQL:ejecutado" & vbCrLf
 
                 If esArregloConElementos(arrTracking) Then
                     '====================================================================='
@@ -117,36 +107,6 @@ Public Function ObtieneStatusTalon_txt(wTalonRastreo As String) As String
                     tstResult = tstResult & "|fecha_entrega:" & CStr(fecha_entrega)
                     tstResult = tstResult & "|last_entrada:" & CStr(last_entrada)
                     tstResult = tstResult & "|incidencia:" & CStr(incidencia) & vbCrLf
-                    
-
-                    '                    For i = 0 To UBound(arrTracking, 2)
-                    '                        If NVL(arrTracking(3, i)) = "DIRECTO" _
-                    '                            And (arrTracking(10, i) = "N" Or (arrTracking(10, i) = "S" And arrTracking(9, i) = "4")) _
-                    '                            And arrTracking(9, i) <> "5" Then
-                    '                            'no recuperar las reexpediciones o los VAS
-                    '                            incidencia = arrTracking(9, i)
-                    '                            fecha_entrega = NVL(arrTracking(6, i))
-                    '                        Else
-                    '                            If arrTracking(9, i) = "5" Then
-                    '                                If i = UBound(arrTracking, 2) - 1 Then
-                    '                                    incidencia = arrTracking(9, i)
-                    '                                    fecha_entrega = ""
-                    '                                End If
-                    '                            End If
-                    '                        End If
-                    '
-                    '                        '<<<20220408: esta fecha se obtiene directamente de la consulta resultante del query
-                    '                        '             ya que no entra en todas las condiciones anteriores y mantiene la última fecha que encontró en otras tuplas:
-                    '                        '    fecha_entrega = NVL(arrTracking(6, i))
-                    '                        ' 20220408>>>
-                    '                        last_entrada = arrTracking(8, i)
-                    '
-                    '                        If arrTracking(11, i) = "VAS" And arrTracking(9, i) <> "0" Then
-                    '                            tieneVAS = True
-                    '                        Else
-                    '                            tieneVAS = False
-                    '                        End If
-                    '                    Next
 
                     If NVL(arrTracking(3, 0)) = "DIRECTO" _
                         And (arrTracking(10, 0) = "N" Or (arrTracking(10, 0) = "S" And arrTracking(9, 0) = "4")) _
@@ -173,7 +133,6 @@ Public Function ObtieneStatusTalon_txt(wTalonRastreo As String) As String
                     End If
                 Else
                     ObtieneInfoBDs = False
-                    'tstResult = tstResult & "|SQL:sin elementos" & vbCrLf
                 End If
             Else
                 tstResult = tstResult & "|sin tdCDclave"
@@ -184,7 +143,6 @@ Public Function ObtieneStatusTalon_txt(wTalonRastreo As String) As String
             '==========================='
             'Interpretación del estatus.'
             '==========================='
-            'Debug.Print (Now & " Inicia interpretación de estatus.")
             If CStr(incidencia) = "0" And CStr(fecha_entrega) <> "" Then
                 stClase = "verde"
                 stTexto = "Entregado"
@@ -204,13 +162,6 @@ Public Function ObtieneStatusTalon_txt(wTalonRastreo As String) As String
                             stTexto = "En transito"
                         End If
                     Case "4"
-                        '                If fecha_entrega <> "" Then
-                        '                    stClase = "rojo-claro"
-                        '                    stTexto = "Intento de entrega fallido"
-                        '                Else
-                        '                    stClase = "rojo"
-                        '                    stTexto = "No entregado"
-                        '                End If
                         stClase = "rojo"
                         stTexto = "No entregado"
                     Case "3"
@@ -354,15 +305,8 @@ error_function:
     End If
 
     Debug.Print (Now & " El talón " & wTalonRastreo & " tiene el estatus *" & stTexto & "*.")
-    
-'    If wTalonRastreo = "0093172-3999-D8C5" Then
-'        stTexto = "[" & stTexto & "]" & tstResult
-'    End If
-
     ObtieneStatusTalon_txt = stTexto
 End Function
-'CHG-DESA-30032022-01>
-
 
 '   '   '   '   '   '   '
 '   FUNCIONES INTERNAS  '
@@ -399,7 +343,6 @@ Catch:
     If Err.Number <> 0 Then
         Debug.Print (Now & " - Ocurrio un error: " & Err.Description)
     End If
-
     
     Set rst1 = Nothing
     Set rst1 = New ADODB.Recordset
@@ -436,50 +379,34 @@ Catch:
     rsT5.LockType = adLockReadOnly
     rsT5.ActiveConnection = Db_link_orfeo
     
-    
-    'Set rsT6 = Nothing
-    'Set rsT6 = New ADODB.Recordset
-    'rsT6.CursorLocation = adUseClient
-    'rsT6.CursorType = adOpenForwardOnly
-    'rsT6.LockType = adLockReadOnly
-    'rsT6.ActiveConnection = Db_link_orfeo
-    
-    
     Set rsT7 = Nothing
     Set rsT7 = New ADODB.Recordset
     rsT7.CursorLocation = adUseClient
     rsT7.CursorType = adOpenForwardOnly
     rsT7.LockType = adLockReadOnly
     rsT7.ActiveConnection = Db_link_orfeo
-    
 
-    '<-- CHG-DESA-05092022-01
     Set rsAVC = Nothing
     Set rsAVC = New ADODB.Recordset
     rsAVC.CursorLocation = adUseClient
     rsAVC.CursorType = adOpenForwardOnly
     rsAVC.LockType = adLockReadOnly
     rsAVC.ActiveConnection = Db_link_orfeo
-    'CHG-DESA-05092022-01 -->
     
-    '<<MRG:Concatenar los resultados del query en una cadena
+    'Concatenar los resultados del query en una cadena
     Set rs_str = Nothing
     Set rs_str = New ADODB.Recordset
     rs_str.CursorLocation = adUseClient
     rs_str.CursorType = adOpenForwardOnly
     rs_str.LockType = adLockReadOnly
     rs_str.ActiveConnection = Db_link_orfeo
-    'MRG>>
-    
     
      ConnString = "PROVIDER=MSDAORA;" & _
              "DATA SOURCE=" & database_name & ";" & _
              "USER ID=" & user & ";PASSWORD=" & Password & ";"
     
-    'ConnString = Split(Split(Db_link_orfeo.ConnectionString, ";")(2), "=")(1)   'User ID
-    'ConnString = ConnString & "/" & Split(Split(Db_link_orfeo.ConnectionString, ";")(1), "=")(1)    'Password
-    'ConnString = ConnString & "@" & Split(Split(Db_link_orfeo.ConnectionString, ";")(3), "=")(1)    'Data Source
 End Sub
+
 ''' Retorna el catálogo de estatus que se estará manejando a nivel global para éste tema, los casos particulares se contemplan en la función principal.
 Private Function obtenerCatalogoEstatus() As String()
 On Error GoTo Catch
@@ -507,7 +434,6 @@ On Error GoTo Catch
     SQL = SQL & " UNION " & vbCrLf
     SQL = SQL & " SELECT 12,'Reservado','Reservado','gris' FROM DUAL    " & vbCrLf
     
-    
     rst1.Open SQL
     If Not rst1.EOF Then
         i = 0
@@ -534,6 +460,7 @@ Catch:
 
     obtenerCatalogoEstatus = arrTmp
 End Function
+
 '''Obtiene de BD's la información general del talón:
 Private Function obtenerInfoTalon(wTalonRastreo As String) As String()
 On Error GoTo Catch
@@ -859,14 +786,14 @@ Catch:
         tstResult = tstResult & "|obtenerInfoTalon:" & Err.Description
     End If
     
-        
     obtenerInfoTalon = arrTmp
 End Function
+
 '''Obtiene todo el tracking del talón:
 Private Function obtenerTrackingTalon(tdCDclave As String)
-Dim SQL6 As String, indx As Integer, colu As Integer
-Dim rsT6 As New ADODB.Recordset
-Dim arrTmp6() As String
+	Dim SQL6 As String, indx As Integer, colu As Integer
+	Dim rsT6 As New ADODB.Recordset
+	Dim arrTmp6() As String
 
     Set rsT6 = Nothing
     Set rsT6 = New ADODB.Recordset
@@ -943,7 +870,6 @@ On Error GoTo Catch
     SQL6 = SQL6 & "       , NVL(DXP.DXP_TINCLAVE, 0)   TINCLAVE   " & vbCrLf
     SQL6 = SQL6 & "       , NVL(DXP.DXP_VAS, 'N')  VAS   " & vbCrLf
     SQL6 = SQL6 & "       , LOGIS.TIPO_OPERACION_FACT (TDCD.TDCDCLAVE, TDCD.TDCD_TRACLAVE) TIPO_OPERACION  " & vbCrLf
-    'SQL6 = SQL6 & "       , 12  TIPO_OPERACION  " & vbCrLf
     SQL6 = SQL6 & "FROM   ETRANS_DETALLE_CROSS_DOCK TDCD  " & vbCrLf
     SQL6 = SQL6 & " INNER JOIN ETRANSFERENCIA_TRADING TRA  " & vbCrLf
     SQL6 = SQL6 & "     ON  TRA.TRACLAVE = TDCD.TDCD_TRACLAVE  " & vbCrLf
@@ -981,7 +907,6 @@ On Error GoTo Catch
     SQL6 = SQL6 & "       AND     TDCD.TDCDSTATUS = '1'   " & vbCrLf
     SQL6 = SQL6 & "ORDER  BY NVL(DXP.DXPCLAVE,0) DESC " & vbCrLf
     
-
     rsT6.Open SQL6
     If Not rsT6.EOF Then
         ReDim arrTmp6(12, 1)
@@ -998,122 +923,14 @@ On Error GoTo Catch
             colu = colu + 1
         Wend
         tstResult = tstResult & "| termina WHILE " & vbCrLf
-        
-        
-        'c = rsT6.RecordCount
-        'ReDim arrTmp6(12, c)
-        
-        'While Not rsT6.EOF
-            'tstResult = tstResult & "|i:" & CStr(i)
-            
-'            c = 0
-'            tstResult = vbCrLf & rsT6.Fields(c) & vbCrLf
-'            If IsNull(rsT6.Fields(0)) Then  '"FECHA_LLEGADA"
-'                arrTmp6(0, i) = ""
-'            Else
-'                arrTmp6(0, i) = rsT6.Fields(0)
-'            End If
-'
-'            c = 1
-'            tstResult = vbCrLf & rsT6.Fields(c) & vbCrLf
-'            If IsNull(rsT6.Fields(1)) Then  '"CIUDAD_ESTADO"
-'                arrTmp6(1, i) = ""
-'            Else
-'                arrTmp6(1, i) = rsT6.Fields(1)
-'            End If
-'
-'            c = 2
-'            tstResult = vbCrLf & rsT6.Fields(c) & vbCrLf
-'            If IsNull(rsT6.Fields(2)) Then  '"ENTRADA"
-'                arrTmp6(2, i) = ""
-'            Else
-'                arrTmp6(2, i) = rsT6.Fields(2)
-'            End If
-'
-'            c = 3
-'            tstResult = vbCrLf & rsT6.Fields(c) & vbCrLf
-'            If IsNull(rsT6.Fields(3)) Then  '"TIPO_ENTREGA"
-'                arrTmp6(3, i) = ""
-'            Else
-'                arrTmp6(3, i) = rsT6.Fields(3)
-'            End If
-'
-'            c = 4
-'            tstResult = vbCrLf & rsT6.Fields(c) & vbCrLf
-'            If IsNull(rsT6.Fields(4)) Then  '"FECHA_SALIDA"
-'                arrTmp6(4, i) = ""
-'            Else
-'                arrTmp6(4, i) = rsT6.Fields(4)
-'            End If
-'
-'            c = 5
-'            tstResult = vbCrLf & rsT6.Fields(c) & vbCrLf
-'             If IsNull(rsT6.Fields(5)) Then '"DESCRIPCION"
-'                arrTmp6(5, i) = ""
-'            Else
-'                arrTmp6(5, i) = rsT6.Fields(5)
-'            End If
-'
-'            c = 6
-'            tstResult = vbCrLf & rsT6.Fields(c) & vbCrLf
-'            If IsNull(rsT6.Fields(6)) Then  '"FECHA_ENTREGA"
-'                arrTmp6(6, i) = ""
-'            Else
-'                arrTmp6(6, i) = rsT6.Fields(6)
-'            End If
-'
-'            c = 7
-'            tstResult = vbCrLf & rsT6.Fields(c) & vbCrLf
-'            If IsNull(rsT6.Fields(7)) Then  '"TIPO_EVIDENCIA"
-'                arrTmp6(7, i) = ""
-'            Else
-'                arrTmp6(7, i) = rsT6.Fields(7)
-'            End If
-'
-'            c = 8
-'            tstResult = vbCrLf & rsT6.Fields(c) & vbCrLf
-'            If IsNull(rsT6.Fields(8)) Then  '"MEZTCLAVE_DEST"
-'                arrTmp6(8, i) = ""
-'            Else
-'                arrTmp6(8, i) = rsT6.Fields(8)
-'            End If
-'
-'            c = 9
-'            tstResult = vbCrLf & rsT6.Fields(c) & vbCrLf
-'            If IsNull(rsT6.Fields(9)) Then  '"TINCLAVE"
-'                arrTmp6(9, i) = ""
-'            Else
-'                arrTmp6(9, i) = rsT6.Fields(9)
-'            End If
-'
-'            c = 10
-'            tstResult = vbCrLf & rsT6.Fields(c) & vbCrLf
-'            If IsNull(rsT6.Fields(10)) Then '"VAS"
-'                arrTmp6(10, i) = ""
-'            Else
-'                arrTmp6(10, i) = rsT6.Fields(10)
-'            End If
-'
-'            c = 11
-'            tstResult = vbCrLf & rsT6.Fields(c) & vbCrLf
-'            If IsNull(rsT6.Fields(11)) Then '"TIPO_OPERACION"
-'                arrTmp6(11, i) = ""
-'            Else
-'                arrTmp6(11, i) = rsT6.Fields(11)
-'            End If
-'
-'            i = i + 1
-        '    rsT6.MoveNext
-        'Wend
+
         rsT6.Close
     Else
         tstResult = vbCrLf & tstResult & "|colu:" & colu & vbCrLf
     End If
-    
         
 Catch:
     If Err.Number <> 0 Then
-        'rsT6.Close
         Debug.Print (Now & " - Ocurrio un error: " & Err.Description)
         tstResult = tstResult & vbCrLf & "  | arrTmp6(" & colu & "," & indx & ") " & vbCrLf & " SQL6: " & SQL6 & vbCrLf
         tstResult = tstResult & vbCrLf & " | obtenerTrackingTalon(catch): " & Err.Description & vbCrLf
@@ -1121,6 +938,7 @@ Catch:
     
     obtenerTrackingTalon = arrTmp6
 End Function
+
 '''Obtiene el estatus de la LTL que se encuentra registrado en BD's sin tomar en cuenta ninguna otra condición:
 Private Function obtenerEstatusSinDocumentar(ByVal wTalonRastreo As String)
 On Error GoTo Catch
@@ -1154,6 +972,7 @@ Catch:
     
     obtenerEstatusSinDocumentar = arrTmp
 End Function
+
 Private Function ObtenerEstatusSinDocumentarCD(wTalonRastreo)
 On Error GoTo Catch
    SQL = " SELECT " & vbCrLf
@@ -1191,9 +1010,10 @@ Catch:
     
     ObtenerEstatusSinDocumentarCD = arrTmp
 End Function
+
 '''Funcionalidad que indica si una operación / movimiento del talón es VAS, LTL ó StandBy:
 Private Function obtenerTipoOperacion(wTalonRastreo As String)
-On Error GoTo Catch
+	On Error GoTo Catch
     SQL = "SELECT LPAD(WELCONS_GENERAL, 7, '0') || '-' || WEL_CLICLEF FROM WEB_LTL WHERE WEL_TALON_RASTREO = '" & wTalonRastreo & "'"
     
     rsT5.Open SQL
@@ -1222,9 +1042,10 @@ Catch:
         tstResult = tstResult & "|obtenerTipoOperacion(catch): " & Err.Description
     End If
 End Function
+
 Private Function ordenarTracking(arrInfo)
     Dim arrTmp, x, y, z
-On Error GoTo Catch
+	On Error GoTo Catch
     If IsArray(arrInfo) Then
         ReDim arrTmp((UBound(arrInfo, 2) + 2) * 10)
         y = 0
@@ -1244,9 +1065,9 @@ Catch:
         tstResult = tstResult & "|ordenarTracking(catch):" & Err.Description
     End If
     
-    
     ordenarTracking = arrTmp
 End Function
+
 Private Function esArregloConElementos(arrInfo) As Boolean
     Dim numElementos As Double
     On Error GoTo Catch:
@@ -1265,11 +1086,11 @@ Private Function esArregloConElementos(arrInfo) As Boolean
 
 Catch:
     If Err.Number <> 0 Then
-        '    tstResult = tstResult & "|esArregloConElementos(catch):" & Err.Description
         numElementos = -1
         esArregloConElementos = False
     End If
 End Function
+
 Function EsGuiaCancelada(sGuia_Firma) As Boolean
     Dim result As Boolean
     Dim arrInfo() As String
@@ -1301,6 +1122,7 @@ Catch:
     
     EsGuiaCancelada = result
 End Function
+
 Function GuiaEnStndBy(sGuia_Firma As String) As Boolean
     Dim result As Boolean
     Dim arrInfo() As String
@@ -1323,7 +1145,6 @@ Function GuiaEnStndBy(sGuia_Firma As String) As Boolean
             End If
         End If
     End If
-    
         
 Catch:
     If Err.Number <> 0 Then
@@ -1331,9 +1152,9 @@ Catch:
         tstResult = tstResult & "|GuiaEnStndBy(catch):" & Err.Description
     End If
 
-    
     GuiaEnStndBy = result
 End Function
+
 Function GuiaEntregada(sGuia_Firma As String) As Boolean
     Dim result_ent As Boolean
     Dim arrInfo_ent() As String
@@ -1348,12 +1169,10 @@ Function GuiaEntregada(sGuia_Firma As String) As Boolean
     iIncidencia_ent = -1
     sFecha_Entrega_ent = ""
     
-    'tstResult = tstResult & "|GuiaEntregada:obtenerInfoTalon"
     arrInfo_ent = obtenerInfoTalon(sGuia_Firma)
     
     If esArregloConElementos(arrInfo_ent) Then
         sTDcdClave_ent = arrInfo_ent(0, 15)
-'        tstResult = tstResult & "|sTDcdClave_ent:" & CStr(sTDcdClave_ent)
     End If
     
     If sTDcdClave_ent <> "" Then
@@ -1373,19 +1192,16 @@ Function GuiaEntregada(sGuia_Firma As String) As Boolean
             result_ent = True
         End If
     End If
-    
             
 Catch:
     If Err.Number <> 0 Then
         Debug.Print (Now & " - Ocurrio un error: " & Err.Description)
         tstResult = tstResult & "|GuiaEntregada(catch):" & Err.Description
     End If
-
     
     GuiaEntregada = result_ent
 End Function
 
-'<-- CHG-DESA-05092022-01
 ' AVC
 Function GetInfoAVC(pedimento As String, aduana As String, cliente As String, Optional anio As String = "") As String
     Dim servidor As String
@@ -1398,7 +1214,6 @@ Function GetInfoAVC(pedimento As String, aduana As String, cliente As String, Op
     SQL = SQL & "INNER JOIN TB_AVC_DET_PEDIMENTO AVC_PED ON AVC_PED.PEDNUMERO = SGE.SGEPEDNUMERO AND AVC_PED.PEDDOUANE = SGE.SGEDOUCLEF AND AVC_PED.PEDANIO = SGE.SGEANIO AND AVC_PED.CLIENTE = SGE.SGE_CLICLEF " & vbCrLf
     SQL = SQL & "INNER JOIN TB_AVC AVC ON  AVC.CODE =  AVC_PED.AVC_CODE " & vbCrLf
     SQL = SQL & "WHERE 1=1 " & vbCrLf
-    'SQL = SQL & "AND  EDOCSAT.CREATED_BY = 'AVC-PDF' " & vbCrLf
     SQL = SQL & "   AND UPPER(EDOCSAT.DSAARCHIVO) LIKE UPPER('%-AVC.pdf') " & vbCrLf
     SQL = SQL & "AND AVC.AVC_STATUS NOT IN ('X')" & vbCrLf
     SQL = SQL & "AND SGE.SGEPEDNUMERO =  '" & pedimento & "' " & vbCrLf
@@ -1426,7 +1241,6 @@ Function GetInfoAVC(pedimento As String, aduana As String, cliente As String, Op
                 Debug.Print "Consultando archivo: " & servidor & rsAVC.Fields("DSACARPETA") & rsAVC.Fields("DSAARCHIVO")
                 If FSO.FileExists(servidor & rsAVC.Fields("DSACARPETA") & rsAVC.Fields("DSAARCHIVO")) Then
                     GetInfoAVC = rsAVC.Fields("DSA_SGECLAVE") & "|" & servidor & rsAVC.Fields("DSACARPETA") & "|" & rsAVC.Fields("DSAARCHIVO")
-                    
                     '3094706|appwin\Expedientes_AVC\21180\|1734-AVC073008202200000152681-AVC.pdf
                             Else
                                     GetInfoAVC = ""
@@ -1438,7 +1252,6 @@ Function GetInfoAVC(pedimento As String, aduana As String, cliente As String, Op
         GetInfoAVC = ""
     End If
     rsAVC.Close
-
     
 Catch:
     If Err.Number <> 0 Then
@@ -1446,8 +1259,8 @@ Catch:
         GetInfoAVC = ""
     End If
 End Function
-'CHG-DESA-05092022-01 -->
-'<<MRG:Función para concatenar los resultados del query en una sola cadena
+
+'Función para concatenar los resultados del query en una sola cadena
 '''NOTA: el query debe de retornar un solo campo
 Function GetQueryString(ByVal sql_str As String)
     On Error GoTo Catch
@@ -1455,15 +1268,14 @@ Function GetQueryString(ByVal sql_str As String)
     Dim varTest As String
     varTest = ""
     
-    '<<MRG:Concatenar los resultados del query en una cadena
+    'Concatenar los resultados del query en una cadena
     Set rs_str = Nothing
     Set rs_str = New ADODB.Recordset
     rs_str.CursorLocation = adUseClient
     rs_str.CursorType = adOpenForwardOnly
     rs_str.LockType = adLockReadOnly
     rs_str.ActiveConnection = Db_link_orfeo
-    'MRG>>
-    
+        
     varTest = Trim(sql_str)
     rs_str.Open varTest
     
@@ -1485,6 +1297,7 @@ Catch:
     End If
     GetQueryString = str_result
 End Function
+
 Function ValidaNombreArchivo(ByVal idRep As String)
     Dim res As Boolean
     res = True
@@ -1493,8 +1306,6 @@ Function ValidaNombreArchivo(ByVal idRep As String)
     End If
     ValidaNombreArchivo = res
 End Function
-'MRG>>
-
 
 Function cliente_con_seguro(CliClef)
         Dim res, sqlSeguro, arrSeguro, iCveEmpresa, iCCOClave
@@ -1522,9 +1333,6 @@ Function cliente_con_seguro(CliClef)
         sqlSeguro = sqlSeguro & "                                                                                               ) " & vbCrLf
         sqlSeguro = sqlSeguro & "                               ) " & vbCrLf
         
-        'Session("SQL") = sqlSeguro
-        'arrSeguro = GetArrayRS(sqlSeguro)
-        
         Set rs_str = Nothing
         Set rs_str = New ADODB.Recordset
         rs_str.CursorLocation = adUseClient
@@ -1546,37 +1354,53 @@ Function cliente_con_seguro(CliClef)
         End If
         
         cliente_con_seguro = res
-        'cliente_con_seguro = iCCOClave
 End Function
-
-
 
 Function obtener_clave_empresa(ByVal CliClef As String) As Double
     Dim sqlEmpresa As String, iCveEmpresa As Double
     Dim rs_str
     
     iCveEmpresa = -1
-    
     sqlEmpresa = ""
+	
     sqlEmpresa = sqlEmpresa & " SELECT  CET_EMPCLAVE CVE_EMPRESA " & vbCrLf
     sqlEmpresa = sqlEmpresa & " FROM    ECLIENT_EMPRESA_TRADING LIGA " & vbCrLf
     sqlEmpresa = sqlEmpresa & " WHERE   1=1 " & vbCrLf
     sqlEmpresa = sqlEmpresa & " AND LIGA.CET_CLICLEF = '" & CliClef & "' " & vbCrLf
     
-    
-          Set rs_str = Nothing
-        Set rs_str = New ADODB.Recordset
-        rs_str.CursorLocation = adUseClient
-        rs_str.CursorType = adOpenForwardOnly
-        rs_str.LockType = adLockReadOnly
-        rs_str.ActiveConnection = Db_link_orfeo
-    
+	Set rs_str = Nothing
+	Set rs_str = New ADODB.Recordset
+	rs_str.CursorLocation = adUseClient
+	rs_str.CursorType = adOpenForwardOnly
+	rs_str.LockType = adLockReadOnly
+	rs_str.ActiveConnection = Db_link_orfeo
     
     rs_str.Open sqlEmpresa
     If Not rs_str.EOF Then
         iCveEmpresa = CDbl(rs_str.Fields(0))
     End If
     rs_str.Close
+
     obtener_clave_empresa = iCveEmpresa
 End Function
 
+Function valida_valor_mercancia(val_mercancia As String)
+    Dim res As Integer
+    
+	res = 0
+	
+	If val_mercancia = "" Then
+		''la variable se encuentra vacia 
+		res = -1
+    ElseIf Not IsNumeric(val_mercancia) Then
+        '' la variable  no es numerica 
+		res = -2
+    ElseIf CDbl(val_mercancia) <= 0 Then
+        '' la variable contiene un número negativo o es igual a 0 
+		res = -3
+	Else 
+		res = 1
+    End If
+    
+	valida_valor_mercancia = res
+End Function
