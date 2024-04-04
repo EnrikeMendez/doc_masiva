@@ -1810,11 +1810,6 @@ catch:
 End Function
 
 Function obtener_destinatario(mi_cliclef As String, mi_dec_num_dir_cliente As String, ByRef mi_die_cclclave As Long, ByRef mi_dieclave As Long)
-'esta validación por cliente es correcta? se utiliza en el módulo web_carga_ltl_gsk_mod
-If mi_cliclef = "20123" Then
-        mi_dec_num_dir_cliente = "0000005957"
-        mi_dec_num_dir_cliente = "0000012878"
-End If
 
   'recupera un DEC_NUM_DIR_CLIENTE(cliente destino) y regresa los CCLCLAVE, DIECLAVE
     Dim rs As New ADODB.Recordset
@@ -1863,10 +1858,7 @@ End If
         get_direccion_entrega_ltl = "ok"
         mi_die_cclclave = rs.Fields("DIE_CCLCLAVE")
         mi_dieclave = rs.Fields("DEC_DIECLAVE")
-       ' mi_dieclave_entrega = rs.Fields("DEC_DIECLAVE_ENTREGA")
-       ' mi_allclave_dest = rs.Fields("ALLCLAVE_DEST")
-       ' num_allclave_dest = rs.Fields("ALLCLAVE_DEST")
-       ' num_cclclave = rs.Fields("DIE_CCLCLAVE")
+
     End If
     rs.Close
 	
