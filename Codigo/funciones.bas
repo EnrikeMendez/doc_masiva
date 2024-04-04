@@ -1407,27 +1407,29 @@ End Function
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Function es_captura_con_factura(ByVal num_client As String) As Boolean
 	Dim res As Boolean
-	Dim iConFactura, sqlConFactura, rs_capt
+	Dim iConFactura, sqlConFactura, rs_con_f
+	On Error GoTo catch
 
 	res = False
 	iConFactura = -1
 	sqlConFactura = ""
-	Set rs_capt = Nothing
-	Set rs_capt = New ADODB.Recordset
-	rs_capt.CursorLocation = adUseClient
-	rs_capt.CursorType = adOpenForwardOnly
-	rs_capt.LockType = adLockReadOnly
-	rs_capt.ActiveConnection = Db_link_orfeo
+	Set rs_con_f = Nothing
+	Set rs_con_f = New ADODB.Recordset
+	rs_con_f.CursorLocation = adUseClient
+	rs_con_f.CursorType = adOpenForwardOnly
+	rs_con_f.LockType = adLockReadOnly
+	rs_con_f.ActiveConnection = Db_link_orfeo
 
 	sqlConFactura = sqlConFactura & " SELECT	NVL(TIPO_DOCUMENTACION,-1) CON_FACTURA " & vbCrLf
 	sqlConFactura = sqlConFactura & " FROM		TB_CONFIG_CLIENTE_DIST " & vbCrLf
 	sqlConFactura = sqlConFactura & " WHERE		ID_CLIENTE	=	'" & num_client & "' " & vbCrLf
 
-	rs_capt.Open sqlConFactura
-    If Not rs_capt.EOF Then
-        iConFactura = CDbl(rs_capt.Fields(0))
+	rs_con_f.Open sqlConFactura
+    If Not rs_con_f.EOF Then
+        iConFactura = CDbl(rs_con_f.Fields(0))
     End If
-    rs_capt.Close
+catch:
+    rs_con_f.Close
 
 	If iConFactura = 1 Then
 		res = True
@@ -1437,27 +1439,29 @@ Function es_captura_con_factura(ByVal num_client As String) As Boolean
 End Function
 Function es_captura_sin_factura(ByVal num_client As String) As Boolean
 	Dim res As Boolean
-	Dim iSinFactura, sqlSinFactura, rs_capt
+	Dim iSinFactura, sqlSinFactura, rs_sin_f
+	On Error GoTo catch
 
 	res = False
 	iSinFactura = -1
 	sqlSinFactura = ""
-	Set rs_capt = Nothing
-	Set rs_capt = New ADODB.Recordset
-	rs_capt.CursorLocation = adUseClient
-	rs_capt.CursorType = adOpenForwardOnly
-	rs_capt.LockType = adLockReadOnly
-	rs_capt.ActiveConnection = Db_link_orfeo
+	Set rs_sin_f = Nothing
+	Set rs_sin_f = New ADODB.Recordset
+	rs_sin_f.CursorLocation = adUseClient
+	rs_sin_f.CursorType = adOpenForwardOnly
+	rs_sin_f.LockType = adLockReadOnly
+	rs_sin_f.ActiveConnection = Db_link_orfeo
 
 	sqlSinFactura = sqlSinFactura & " SELECT	NVL(TIPO_DOCUMENTACION,-1) SIN_FACTURA " & vbCrLf
 	sqlSinFactura = sqlSinFactura & " FROM		TB_CONFIG_CLIENTE_DIST " & vbCrLf
 	sqlSinFactura = sqlSinFactura & " WHERE		ID_CLIENTE	=	'" & num_client & "' " & vbCrLf
 
-	rs_capt.Open sqlSinFactura
-    If Not rs_capt.EOF Then
-        iSinFactura = CDbl(rs_capt.Fields(0))
+	rs_sin_f.Open sqlSinFactura
+    If Not rs_sin_f.EOF Then
+        iSinFactura = CDbl(rs_sin_f.Fields(0))
     End If
-    rs_capt.Close
+catch:
+    rs_sin_f.Close
 
 	If iSinFactura = 0 Then
 		res = True
@@ -1467,27 +1471,29 @@ Function es_captura_sin_factura(ByVal num_client As String) As Boolean
 End Function
 Function es_captura_con_doc_fuente(ByVal num_client As String) As Boolean
 	Dim res As Boolean
-	Dim iConDocFuente, sqlConDocFuente, rs_capt
+	Dim iConDocFuente, sqlConDocFuente, rs_con_df
+	On Error GoTo catch
 	
 	res = False
 	iConDocFuente = -1
 	sqlConDocFuente = ""
-	Set rs_capt = Nothing
-	Set rs_capt = New ADODB.Recordset
-	rs_capt.CursorLocation = adUseClient
-	rs_capt.CursorType = adOpenForwardOnly
-	rs_capt.LockType = adLockReadOnly
-	rs_capt.ActiveConnection = Db_link_orfeo
+	Set rs_con_df = Nothing
+	Set rs_con_df = New ADODB.Recordset
+	rs_con_df.CursorLocation = adUseClient
+	rs_con_df.CursorType = adOpenForwardOnly
+	rs_con_df.LockType = adLockReadOnly
+	rs_con_df.ActiveConnection = Db_link_orfeo
 	
 	sqlConDocFuente = sqlConDocFuente & " SELECT	NVL(TIPO_DOCUMENTACION,-1) CON_DOCUMENTO_FUENTE " & vbCrLf
 	sqlConDocFuente = sqlConDocFuente & " FROM		TB_CONFIG_CLIENTE_DIST " & vbCrLf
 	sqlConDocFuente = sqlConDocFuente & " WHERE		ID_CLIENTE	=	'" & num_client & "' " & vbCrLf
 	
-	rs_capt.Open sqlConDocFuente
-    If Not rs_capt.EOF Then
-        iConDocFuente = CDbl(rs_capt.Fields(0))
+	rs_con_df.Open sqlConDocFuente
+    If Not rs_con_df.EOF Then
+        iConDocFuente = CDbl(rs_con_df.Fields(0))
     End If
-    rs_capt.Close
+catch:
+    rs_con_df.Close
 
 	If iConDocFuente = 2 Then
 		res = True
@@ -1498,15 +1504,16 @@ End Function
 Function validar_destinatario(ByVal clave_destino_cliente As String, ByVal num_client As String) As Double
 	Dim res As Double
     Dim SQL As String
-    Dim rs As New ADODB.Recordset
+    Dim rs_dest As New ADODB.Recordset
+	On Error GoTo catch
 
     res = -1
     SQL = ""
-    Set rs = New ADODB.Recordset
-    rs.CursorLocation = adUseClient
-    rs.CursorType = adOpenForwardOnly
-    rs.LockType = adLockBatchOptimistic
-    rs.ActiveConnection = Db_link_orfeo
+    Set rs_dest = New ADODB.Recordset
+    rs_dest.CursorLocation = adUseClient
+    rs_dest.CursorType = adOpenForwardOnly
+    rs_dest.LockType = adLockBatchOptimistic
+    rs_dest.ActiveConnection = Db_link_orfeo
 
 	SQL = SQL & " SELECT	CCL.CCLCLAVE CCLCLAVE " & vbCrLf
 	SQL = SQL & " FROM	EDIRECCION_ENTR_CLIENTE_LIGA DIL " & vbCrLf
@@ -1524,23 +1531,57 @@ Function validar_destinatario(ByVal clave_destino_cliente As String, ByVal num_c
 	SQL = SQL & " 	AND	DIL.DEC_NUM_DIR_CLIENTE	=	'" & clave_destino_cliente & "' " & vbCrLf
 	SQL = SQL & " 	AND	DIL.DEC_CLICLEF			=	'" & num_client & "' " & vbCrLf
 
-    On Error GoTo catch
-		rs.Open SQL
-		If Not rs.EOF Then
-			res = CDbl(rs.Fields("CCLCLAVE"))
-		End If
+	rs_dest.Open SQL
+	If Not rs_dest.EOF Then
+		res = CDbl(rs_dest.Fields("CCLCLAVE"))
+	End If
 catch:
-    rs.Close
-    Set rs = Nothing
+    rs_dest.Close
+    Set rs_dest = Nothing
 
     validar_destinatario = res
 End Function
-Function tipo_tarifa_cliente(ByVal num_client As String) As String
-	On Error GoTo catch
+Function obtener_tipo_tarifa_cliente(ByVal num_client As String) As Double
+	' ' ' ' ' ' ' ' ' ' ' ' ' ' '
+	'	1	Peso/Volumen		'
+	' - - - - - - - - - - - - - '
+	'	2	Caja/Tarima			'
+	' - - - - - - - - - - - - - '
+	'	3	Bulto Constitutivo	'
+	' - - - - - - - - - - - - - '
+	'	4	Solo Tarima			'
+	' ' ' ' ' ' ' ' ' ' ' ' ' ' '
 	
-	'PENDIENTE DE QUE EL EQUIPO ORACLE FORMS NOS COMAPRTA EL QUERY PARA VALIDAR EL TIPO DE TARIFA
+	Dim res As Double
+    Dim SQL As String
+    Dim rs_tar As New ADODB.Recordset
+	On Error GoTo catch
+
+    res = -1
+    SQL = ""
+    Set rs_tar = New ADODB.Recordset
+    rs_tar.CursorLocation = adUseClient
+    rs_tar.CursorType = adOpenForwardOnly
+    rs_tar.LockType = adLockBatchOptimistic
+    rs_tar.ActiveConnection = Db_link_orfeo
+	
+	SQL = SQL & " SELECT	 DISTINCT " & vbCrLf
+	SQL = SQL & " 		 CCD.ID_TIPO_TARIFA ID_TIPO_TARIFA " & vbCrLf
+	SQL = SQL & " 		,TF.NOMBRE NOMBRE " & vbCrLf
+	SQL = SQL & " FROM	 LOGIS.TB_CONFIG_CLIENTE_DIST CCD " & vbCrLf
+	SQL = SQL & " 	INNER JOIN	LOGIS.TB_TIPO_TARIFA_DIST TF " & vbCrLf
+	SQL = SQL & " 		ON	CCD.ID_TIPO_TARIFA	=	TF.ID_TIPO_TARIFA " & vbCrLf
+	SQL = SQL & " WHERE	CCD.ID_CLIENTE	=	'" & num_client & "' " & vbCrLf
+
+	rs_tar.Open SQL
+	If Not rs_tar.EOF Then
+		res = CDbl(rs_tar.Fields("ID_TIPO_TARIFA"))
+	End If
 catch:
-	tipo_tarifa_cliente = ""
+	rs_tar.Close
+    Set rs_tar = Nothing
+	
+	obtener_tipo_tarifa_cliente = res
 End Function
 Function validar_bultos_totales(ByVal bultos_totales As Double, ByVal bultos_granel As Double, ByVal cantidad_tarimas As Double, ByVal bultos_constitutivos_tarimas As Double) As Boolean
 	Dim res As Boolean
@@ -1564,7 +1605,7 @@ Function validar_cdad_bultos_granel(ByVal bultos_granel As String, ByVal num_cli
 	res = False
 	cdad_bultos = -1
 	
-	If tipo_tarifa_cliente(num_client) = "Bulto Constitutivo" Then
+	If obtener_tipo_tarifa_cliente(num_client) = 3 Then
 		If bultos_granel <> "" Then
 			cdad_bultos = CDbl(bultos_granel)
 			
@@ -1660,4 +1701,110 @@ Function validar_observaciones(ByVal txt_observaciones As String) As Boolean
 	
 catch:
 	validar_observaciones = res
+End Function
+Function obtener_condiciones_entrega(ByVal txt As String) As String
+	Dim res As String
+	On Error GoTo catch
+	
+	res = "N"
+	
+	If UCase(txt) = UCase("Entrega a domicilio") Or UCase(txt) = UCase("entrega_domicilio") Then
+		res = "S"
+	End If
+	
+catch:
+	obtener_condiciones_entrega = res
+End Function
+Function obtener_dice_contener(ByVal num_client As String) As String
+	Dim res As String
+    Dim SQL As String
+    Dim rs_cont As New ADODB.Recordset
+	On Error GoTo catch
+
+    res = ""
+    SQL = ""
+    Set rs_cont = New ADODB.Recordset
+    rs_cont.CursorLocation = adUseClient
+    rs_cont.CursorType = adOpenForwardOnly
+    rs_cont.LockType = adLockBatchOptimistic
+    rs_cont.ActiveConnection = Db_link_orfeo
+	
+	SQL = SQL & " SELECT	DESC_GEN_DISTRIBUCION DICE_CONTENER " & vbCrLf
+	SQL = SQL & " FROM	TB_ECLIENT_CP " & vbCrLf
+	SQL = SQL & " WHERE	CLICLEF	=	'" & num_client & "' " & vbCrLf
+
+	rs_cont.Open SQL
+	If Not rs_cont.EOF Then
+		res = rs_cont.Fields("DICE_CONTENER")
+	End If
+	
+catch:
+	rs_cont.Close
+    Set rs_cont = Nothing
+
+	obtener_dice_contener = res
+End Function
+Function obtener_recol_domicilio(ByVal num_client As String) As String
+	Dim res As String
+    Dim SQL As String
+    Dim rs_reco As New ADODB.Recordset
+	On Error GoTo catch
+
+    res = "N"
+	SQL = ""	
+    Set rs_reco = New ADODB.Recordset
+    rs_reco.CursorLocation = adUseClient
+    rs_reco.CursorType = adOpenForwardOnly
+    rs_reco.LockType = adLockBatchOptimistic
+    rs_reco.ActiveConnection = Db_link_orfeo
+	
+	SQL = SQL & " SELECT	NVL(RECOLECCION_A_DOMICILIO,0) RECO " & vbCrLf
+	SQL = SQL & " FROM	LOGIS.TB_CONFIG_CLIENTE_DIST CCD " & vbCrLf
+	SQL = SQL & " 	INNER JOIN	LOGIS.TB_TIPO_TARIFA_DIST TF " & vbCrLf
+	SQL = SQL & " 		ON	CCD.ID_TIPO_TARIFA	=	TF.ID_TIPO_TARIFA " & vbCrLf
+	SQL = SQL & " WHERE	CCD.ID_CLIENTE	=	'" & num_client & "' " & vbCrLf
+
+	rs_reco.Open SQL
+	If Not rs_reco.EOF Then
+		If rs_reco.Fields("RECO") = "1" Then
+			res = "S"
+		End If
+	End If
+	
+catch:
+	rs_reco.Close
+    Set rs_reco = Nothing
+
+	obtener_recol_domicilio = res
+End Function
+Function obtener_prepagado_por_cobrar(ByVal num_client As String) As String
+	Dim res As String
+    Dim SQL As String
+    Dim rs_prep As New ADODB.Recordset
+	On Error GoTo catch
+
+    res = "PREPAGADO"
+	SQL = ""	
+    Set rs_prep = New ADODB.Recordset
+    rs_prep.CursorLocation = adUseClient
+    rs_prep.CursorType = adOpenForwardOnly
+    rs_prep.LockType = adLockBatchOptimistic
+    rs_prep.ActiveConnection = Db_link_orfeo
+	
+	SQL = SQL & " SELECT	UPD.COBRAR_PREPAGO COBRAR_PREPAGO " & vbCrLf
+	SQL = SQL & " FROM	USUARIO_PERMISO_DISTRIBUCION UPD " & vbCrLf
+	SQL = SQL & " WHERE	UPD.NOMBRE_USUARIO	=	'" & num_client & "' " & vbCrLf
+
+	rs_prep.Open SQL
+	If Not rs_prep.EOF Then
+		If rs_prep.Fields("COBRAR_PREPAGO") = "2" Then
+			res = "POR COBRAR"
+		End If
+	End If
+	
+catch:
+	rs_prep.Close
+    Set rs_prep = Nothing
+
+	obtener_prepagado_por_cobrar = res
 End Function
