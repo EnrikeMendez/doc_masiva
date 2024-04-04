@@ -1808,3 +1808,47 @@ catch:
 
 	obtener_prepagado_por_cobrar = res
 End Function
+Function validar_cantidad_nuis_disponibles(ByVal num_client As String, ByVal nuis_necesarios As Double) As Boolean
+	Dim res As Boolean
+	On Error GoTo catch
+
+    res = False
+	If obtener_nuis_disponibles(num_client) >= nuis_necesarios Then
+		res = True
+	End If
+	
+catch:
+	obtener_prepagado_por_cobrar = res
+End Function
+Function obtener_nuis_disponibles(ByVal num_client As String) As Double
+	Dim res As Double
+    Dim SQL As String
+    Dim rs_disp As New ADODB.Recordset
+	On Error GoTo catch
+
+    res = -1
+	SQL = ""	
+    Set rs_disp = New ADODB.Recordset
+    rs_disp.CursorLocation = adUseClient
+    rs_disp.CursorType = adOpenForwardOnly
+    rs_disp.LockType = adLockBatchOptimistic
+    rs_disp.ActiveConnection = Db_link_orfeo
+	
+	SQL = SQL & " SELECT	COUNT(WEL.WELCLAVE) CANTIDAD " & vbCrLf
+	SQL = SQL & " FROM		WEB_LTL WEL " & vbCrLf
+	SQL = SQL & " WHERE		WEL.WELSTATUS	=	3 " & vbCrLf
+	SQL = SQL & " 	AND		WEL.WEL_CLICLEF	=	'" & num_client & "' " & vbCrLf
+
+	rs_disp.Open SQL
+	If Not rs_disp.EOF Then
+		If rs_disp.Fields("CANTIDAD") <> "" Then
+			res = CDbl(rs_disp.Fields("CANTIDAD"))
+		End If
+	End If
+	
+catch:
+	rs_disp.Close
+    Set rs_disp = Nothing
+
+	obtener_nuis_disponibles = res
+End Function
