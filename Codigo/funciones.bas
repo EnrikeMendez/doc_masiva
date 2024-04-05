@@ -1867,20 +1867,25 @@ Function obtener_destinatario(ByVal num_client As String, ByVal n_client As Stri
     rs.ActiveConnection = Db_link_orfeo
     
 	
-    SQL = "SELECT DEC_DIECLAVE, DIE_CCLCLAVE, NVL((SELECT DER_ALLCLAVE FROM EDESTINOS_POR_RUTA WHERE DER_VILCLEF = DIEVILLE AND DER_ALLCLAVE IS NOT NULL AND ROWNUM = 1), 1) ALLCLAVE_DEST "
+	SQL = "SELECT DEC_DIECLAVE, DIE_CCLCLAVE, NVL((SELECT DER_ALLCLAVE FROM EDESTINOS_POR_RUTA WHERE DER_VILCLEF = DIEVILLE AND DER_ALLCLAVE IS NOT NULL AND ROWNUM = 1), 1) ALLCLAVE_DEST "
     SQL = SQL & "   , NVL(DEC_DIECLAVE_ENTREGA, -1) DEC_DIECLAVE_ENTREGA " & vbCrLf
-    SQL = SQL & " FROM EDIRECCION_ENTR_CLIENTE_LIGA " & vbCrLf
-    SQL = SQL & "   , EDIRECCIONES_ENTREGA " & vbCrLf
+    SQL = SQL & " FROM EDIRECCION_ENTR_CLIENTE_LIGA DECL " & vbCrLf
+	SQL = SQL & " INNER JOIN " & vbCrLf
+	SQL = SQL & " EDIRECCIONES_ENTREGA DE " & vbCrLf
+	SQL = SQL & " ON " & vbCrLf
+	SQL = SQL & "  DECL.DEC_DIECLAVE = DE.DIECLAVE " & vbCrLf
 
     SQL = SQL & " WHERE DEC_CLICLEF = '" & Replace(num_client, "'", "''") & "'" & vbCrLf
     SQL = SQL & "   AND DEC_NUM_DIR_CLIENTE = '" & Replace(n_client, "'", "''") & "'" & vbCrLf
-    SQL = SQL & "   AND DEC_DIECLAVE = DIECLAVE " & vbCrLf
     SQL = SQL & "   AND DIE_STATUS = 1 " & vbCrLf
 
     SQL = SQL & "   AND EXISTS (" & vbCrLf
-    SQL = SQL & "       SELECT NULL FROM EDESTINOS_POR_RUTA " & vbCrLf
-    SQL = SQL & "        WHERE DER_VILCLEF = DIEVILLE " & vbCrLf
-    SQL = SQL & "          AND NVL(DER_ALLCLAVE, 1) > 0 " & vbCrLf
+    SQL = SQL & "       SELECT NULL FROM EDESTINOS_POR_RUTA DPR" & vbCrLf
+	SQL = SQL & " INNER JOIN " & vbCrLf
+	SQL = SQL & " EDIRECCIONES_ENTREGA DE1 " & vbCrLf
+	SQL = SQL & " ON " & vbCrLf
+	SQL = SQL & " DPR.DER_VILCLEF = DE1.DIEVILLE " & vbCrLf
+    SQL = SQL & "        WHERE NVL(DER_ALLCLAVE, 1) > 0 " & vbCrLf
     SQL = SQL & "          AND DER_TIPO_ENTREGA NOT IN ('INSEGURO', 'INVALIDO') " & vbCrLf
     SQL = SQL & "          AND SF_LOGIS_CLIENTE_RESTRIC(DEC_CLICLEF, DER_TIPO_ENTREGA) = 1 " & vbCrLf
     SQL = SQL & "       ) " & vbCrLf
