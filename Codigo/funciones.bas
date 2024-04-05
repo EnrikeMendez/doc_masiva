@@ -1818,7 +1818,7 @@ Function validar_cantidad_nuis_disponibles(ByVal num_client As String, ByVal nui
 	End If
 	
 catch:
-	obtener_prepagado_por_cobrar = res
+	validar_cantidad_nuis_disponibles = res
 End Function
 Function obtener_nuis_disponibles(ByVal num_client As String) As Double
 	Dim res As Double
@@ -1851,4 +1851,57 @@ catch:
     Set rs_disp = Nothing
 
 	obtener_nuis_disponibles = res
+End Function
+
+Function obtener_destinatario(ByVal num_client As String, ByVal n_client As String, ByRef cclclave As Long, ByRef dieclave As Long)
+  
+    Dim SQL As String
+    Dim rs As New ADODB.Recordset
+	On Error GoTo catch
+
+	SQL = ""	
+    Set rs = New ADODB.Recordset
+    rs.CursorLocation = adUseClient
+    rs.CursorType = adOpenForwardOnly
+    rs.LockType = adLockBatchOptimistic
+    rs.ActiveConnection = Db_link_orfeo
+    
+	
+    SQL = "SELECT DEC_DIECLAVE, DIE_CCLCLAVE, NVL((SELECT DER_ALLCLAVE FROM EDESTINOS_POR_RUTA WHERE DER_VILCLEF = DIEVILLE AND DER_ALLCLAVE IS NOT NULL AND ROWNUM = 1), 1) ALLCLAVE_DEST "
+    SQL = SQL & "   , NVL(DEC_DIECLAVE_ENTREGA, -1) DEC_DIECLAVE_ENTREGA " & vbCrLf
+    SQL = SQL & " FROM EDIRECCION_ENTR_CLIENTE_LIGA " & vbCrLf
+    SQL = SQL & "   , EDIRECCIONES_ENTREGA " & vbCrLf
+
+    SQL = SQL & " WHERE DEC_CLICLEF = '" & Replace(num_client, "'", "''") & "'" & vbCrLf
+    SQL = SQL & "   AND DEC_NUM_DIR_CLIENTE = '" & Replace(n_client, "'", "''") & "'" & vbCrLf
+    SQL = SQL & "   AND DEC_DIECLAVE = DIECLAVE " & vbCrLf
+    SQL = SQL & "   AND DIE_STATUS = 1 " & vbCrLf
+
+    SQL = SQL & "   AND EXISTS (" & vbCrLf
+    SQL = SQL & "       SELECT NULL FROM EDESTINOS_POR_RUTA " & vbCrLf
+    SQL = SQL & "        WHERE DER_VILCLEF = DIEVILLE " & vbCrLf
+    SQL = SQL & "          AND NVL(DER_ALLCLAVE, 1) > 0 " & vbCrLf
+    SQL = SQL & "          AND DER_TIPO_ENTREGA NOT IN ('INSEGURO', 'INVALIDO') " & vbCrLf
+    SQL = SQL & "          AND SF_LOGIS_CLIENTE_RESTRIC(DEC_CLICLEF, DER_TIPO_ENTREGA) = 1 " & vbCrLf
+    SQL = SQL & "       ) " & vbCrLf
+
+	
+	rs.Open SQL
+    If rs.EOF Then
+        get_direccion_entrega_ltl = "- direccion inexistente, o destino INSEGURO, INVALIDO o TIPO DE ENTREGA no autorizado:" & _
+            " id: " & n_client & vbCrLf 
+    ElseIf rs.RecordCount > 1 Then
+        get_direccion_entrega_ltl = "- existe mas de un registro ligado a este numero direccion:" & _
+            " id: " & n_client & vbCrLf
+    Else
+        get_direccion_entrega_ltl = "ok"
+        cclclave = rs.Fields("DIE_CCLCLAVE")
+        dieclave = rs.Fields("DEC_DIECLAVE")
+
+    End If
+
+catch:
+	rs.Close
+    Set rs = Nothing
+	
 End Function
