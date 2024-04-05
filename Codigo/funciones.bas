@@ -1854,7 +1854,6 @@ catch:
 End Function
 
 Function obtener_destinatario(ByVal num_client As String, ByVal n_client As String, ByRef cclclave As Long, ByRef dieclave As Long)
-  
     Dim SQL As String
     Dim rs As New ADODB.Recordset
 	On Error GoTo catch
@@ -1866,7 +1865,6 @@ Function obtener_destinatario(ByVal num_client As String, ByVal n_client As Stri
     rs.LockType = adLockBatchOptimistic
     rs.ActiveConnection = Db_link_orfeo
     
-	
 	SQL = "SELECT DEC_DIECLAVE, DIE_CCLCLAVE, NVL((SELECT DER_ALLCLAVE FROM EDESTINOS_POR_RUTA WHERE DER_VILCLEF = DIEVILLE AND DER_ALLCLAVE IS NOT NULL AND ROWNUM = 1), 1) ALLCLAVE_DEST "
     SQL = SQL & "   , NVL(DEC_DIECLAVE_ENTREGA, -1) DEC_DIECLAVE_ENTREGA " & vbCrLf
     SQL = SQL & " FROM EDIRECCION_ENTR_CLIENTE_LIGA DECL " & vbCrLf
@@ -1908,5 +1906,120 @@ Function obtener_destinatario(ByVal num_client As String, ByVal n_client As Stri
 catch:
 	rs.Close
     Set rs = Nothing
+End Function
+Function obtener_nombre_usuario(ByVal usuario As String)
+	Dim SQL As String
+	Dim res as String
+	Dim rstNU As New ADODB.Recordset
+	On Error GoTo catch
+
+	res = "DOC_MASIVA"
+	Set rstNU = New ADODB.Recordset
+	rstNU.CursorLocation = adUseClient
+	rstNU.CursorType = adOpenForwardOnly
+	rstNU.LockType = adLockBatchOptimistic
+	rstNU.ActiveConnection = Db_link_orfeo
+
+	If usuario = "" Then
+		usuario = "USER"
+	End If
+
+	SQL = ""
+	SQL = SQL & " SELECT " & vbCrLf
+	SQL = SQL & " 	REPLACE " & vbCrLf
+	SQL = SQL & " 		( " & vbCrLf
+	SQL = SQL & " 			REPLACE(REPLACE(UPPER(SUBSTR('DOC_MASIVA_' || '" & usuario & "',1,29)),':',''),'\','_') " & vbCrLf
+	SQL = SQL & " 			,'.','_' " & vbCrLf
+	SQL = SQL & " 		) USR_DOC_MASIV " & vbCrLf
+	SQL = SQL & " FROM	DUAL " & vbCrLf
+
+	rstNU.Open SQL
+	If Not rstNU.EOF Then
+		If rstNU.Fields("USR_DOC_MASIV") <> "" Then
+			sNombreUsuario = rstNU.Fields("USR_DOC_MASIV")
+		End If
+	End If
 	
+catch:
+	rstNU.Close
+    Set rstNU = Nothing
+	
+	obtener_nombre_usuario = res
+End Function
+Function GetAllXLSheetNames_UNIQUE( _
+              ByVal ExcelFile As String, _
+              Optional ByVal HasRow1FieldNames As Boolean = True _
+              ) As Collection
+	'Make sure you have reference set to Microsoft
+	'ActiveX Data Objects 2.X Library (if not default)
+	'and Microsoft ADO Ext. 2.X for DDL and Security
+
+	Dim oConn As ADODB.Connection   '
+	Dim cat As ADOX.Catalog   '
+	Dim tbl As ADOX.Table
+	Dim rs As New ADODB.Recordset
+	Dim myCollection As New Collection
+
+	'Open the Excel File
+	Set oConn = New ADODB.Connection
+	Set cat = New ADOX.Catalog
+
+	'Use
+	oConn.Open	"Provider=Microsoft.Jet.OLEDB.4.0;" & _
+				"Data Source=" & ExcelFile & ";" & _
+				"Extended Properties=""Excel 8.0;HDR=YES;IMEX=1;" & _
+				IIf(HasRow1FieldNames, "YES", "NO") & ";"""
+	Set cat.ActiveConnection = oConn
+	
+	For Each tbl In cat.Tables
+		'you could also stick some code here to work with
+		'the sheet directly hence the import of Header YES/NO    Next
+		myCollection.Add tbl.Name
+	Next
+	
+	Set rs = Nothing
+	Set tbl = Nothing
+	Set cat = Nothing
+	oConn.Close
+	Set oConn = Nothing
+	Set GetAllXLSheetNames_UNIQUE = myCollection
+	Set myCollection = Nothing
+End Function
+Private Function obtener_cedis_x_remitente(ByVal num_client As String, ByVal disclef As String, ByRef allclave_ori As Integer) As String
+	Dim SQL As String
+	Dim res as String
+	Dim rs As New ADODB.Recordset
+
+	SQL = ""
+	res = ""
+	Set rs = New ADODB.Recordset
+	rs.CursorLocation = adUseClient
+	rs.CursorType = adOpenForwardOnly
+	rs.LockType = adLockBatchOptimistic
+	rs.ActiveConnection = Db_link_orfeo
+
+	SQL = SQL & " SELECT	DISCLEF DISCLEF, " & vbCrLf
+	SQL = SQL & " 			(SELECT	DER_ALLCLAVE " & vbCrLf
+	SQL = SQL & " 			 FROM	EDESTINOS_POR_RUTA " & vbCrLf
+	SQL = SQL & " 			 WHERE	DER_VILCLEF	=	DISVILLE " & vbCrLf
+	SQL = SQL & " 			 	AND	DER_ALLCLAVE	IS NOT	NULL " & vbCrLf
+	SQL = SQL & " 			 	AND	ROWNUM	= 1) ALLCLAVE_ORI " & vbCrLf
+	SQL = SQL & " FROM	EDISTRIBUTEUR " & vbCrLf
+	SQL = SQL & " WHERE	DISCLEF		=	'" & Replace(disclef, "'", "''") & "' " & vbCrLf
+	SQL = SQL & " 	AND	DISCLIENT	=	'" & Replace(num_client, "'", "''") & "' " & vbCrLf
+
+	rs.Open SQL
+	If rs.EOF Then
+		res =	"- remitente inexistente:" & _
+				" id: " & disclef & vbCrLf & vbCrLf
+	Else
+		res = "ok"
+		disclef = rs.Fields("DISCLEF")
+		allclave_ori = rs.Fields("ALLCLAVE_ORI")
+    End If
+
+catch:
+    rs.Close
+    Set rs = Nothing
+	obtener_cedis_x_remitente = res
 End Function
