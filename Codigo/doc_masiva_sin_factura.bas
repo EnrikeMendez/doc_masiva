@@ -2,7 +2,7 @@ Attribute VB_Name = "doc_masiva_sin_factura"
 Option Explicit
 Option Base 0
 
-Sub doc_masiva_sin_fact(Archivo As String, cliente As String, correo_electronico As String, mi_disclef As String, idCron As String)
+Sub doc_masiva_sin_fact(Archivo As String, cliente As String, correo_electronico As String, mi_disclef As String)
 	On Error GoTo catch
 	
 	' ' ' ' '
@@ -324,7 +324,6 @@ Sub doc_masiva_sin_fact(Archivo As String, cliente As String, correo_electronico
 		Call log_SQL("doc_masiva_sin_fact", "termina documentacion", cliente)
 		
 		notifica_exito(cliente, correo_electronico, Archivo, cant_nuis, lst_NUIs_insertados)
-		borrar_id_cron(idCron)
 	End If
 catch:
 End Sub
