@@ -40,6 +40,10 @@ Private rs_str As New ADODB.Recordset
 Private str_result As String
 
 
+'Variables de Correo
+Private jmail As New jmail.Message
+
+
 '   '   '   '   '   '   '
 '   FUNCIÓN PRINCIPAL   '
 '   '   '   '   '   '   '
@@ -51,13 +55,13 @@ Public Function ObtieneStatusTalon_txt(wTalonRastreo As String) As String
 
     'Inicialización de variables:
     Call init_var
-	
+        
     tstResult = ""
     stTexto = ""
     statusCancelado = EsGuiaCancelada(wTalonRastreo)
     statusStandby = GuiaEnStndBy(wTalonRastreo)
     
-	If statusCancelado <> True And statusStandby <> True Then
+        If statusCancelado <> True And statusStandby <> True Then
         statusEntregado = GuiaEntregada(wTalonRastreo)
     End If
 
@@ -312,7 +316,7 @@ End Function
 '   FUNCIONES INTERNAS  '
 '   '   '   '   '   '   '
 Private Sub init_var()
-On Error GoTo Catch
+On Error GoTo catch
 
     i = 0
     j = 0
@@ -339,7 +343,7 @@ On Error GoTo Catch
     End If
     
         
-Catch:
+catch:
     If Err.Number <> 0 Then
         Debug.Print (Now & " - Ocurrio un error: " & Err.Description)
     End If
@@ -409,7 +413,7 @@ End Sub
 
 ''' Retorna el catálogo de estatus que se estará manejando a nivel global para éste tema, los casos particulares se contemplan en la función principal.
 Private Function obtenerCatalogoEstatus() As String()
-On Error GoTo Catch
+On Error GoTo catch
     SQL = " SELECT 1 AS No_Evento,  'Documentado' AS Estatus,    'Creacion de la' AS Observaciones,  'amarillo' AS Clase FROM DUAL   " & vbCrLf
     SQL = SQL & " UNION " & vbCrLf
     SQL = SQL & " SELECT 2,'En Recoleccion','Recoleccion','naranja' FROM DUAL    " & vbCrLf
@@ -450,7 +454,7 @@ On Error GoTo Catch
         Wend
     End If
             
-Catch:
+catch:
     rst1.Close
     
     If Err.Number <> 0 Then
@@ -463,7 +467,7 @@ End Function
 
 '''Obtiene de BD's la información general del talón:
 Private Function obtenerInfoTalon(wTalonRastreo As String) As String()
-On Error GoTo Catch
+On Error GoTo catch
     SQL = "SELECT TO_CHAR(WEL.WELCONS_GENERAL, 'FM0000000') || '-' ||GET_CLI_ENMASCARADO(WEL.WEL_CLICLEF) || DECODE(WEL_ORI.WELCLAVE, NULL, NULL, ' (talon ori: ' || TO_CHAR(WEL_ORI.WELCONS_GENERAL, 'FM0000000') || '-' ||GET_CLI_ENMASCARADO(WEL_ORI.WEL_CLICLEF) ||')') AS TALON " & vbCrLf
     SQL = SQL & "       , NVL(WEL.WEL_TALON_RASTREO, WEL.WEL_FIRMA) AS FIRMA " & vbCrLf
     SQL = SQL & "       , TO_CHAR( WEL.DATE_CREATED, 'DD/MM/YYYY HH24:MI') AS FECHA_CREACION " & vbCrLf
@@ -778,7 +782,7 @@ On Error GoTo Catch
         Wend
     End If
     
-Catch:
+catch:
     rst4.Close
     
     If Err.Number <> 0 Then
@@ -791,9 +795,9 @@ End Function
 
 '''Obtiene todo el tracking del talón:
 Private Function obtenerTrackingTalon(tdCDclave As String)
-	Dim SQL6 As String, indx As Integer, colu As Integer
-	Dim rsT6 As New ADODB.Recordset
-	Dim arrTmp6() As String
+        Dim SQL6 As String, indx As Integer, colu As Integer
+        Dim rsT6 As New ADODB.Recordset
+        Dim arrTmp6() As String
 
     Set rsT6 = Nothing
     Set rsT6 = New ADODB.Recordset
@@ -806,7 +810,7 @@ Private Function obtenerTrackingTalon(tdCDclave As String)
     colu = 0
     SQL6 = ""
 
-On Error GoTo Catch
+On Error GoTo catch
     SQL6 = "SELECT       TO_CHAR(TAEFECHALLEGADA, 'DD/MM/YYYY HH24:MI') " & vbCrLf 'AS FECHA_LLEGADA " & vbCrLf
     SQL6 = SQL6 & "       , InitCap(CIU_EAL.VILNOM) || ' (' || InitCap(EST_EAL.ESTNOMBRE)  || ')' " & vbCrLf 'AS CIUDAD_ESTADO " & vbCrLf
     SQL6 = SQL6 & "       , 'Entrada CEDIS Logis (' || EAL_ORI.ALLCODIGO || ' - ' || InitCap(CIU_EAL.VILNOM) || ')' " & vbCrLf 'AS ENTRADA " & vbCrLf
@@ -929,7 +933,7 @@ On Error GoTo Catch
         tstResult = vbCrLf & tstResult & "|colu:" & colu & vbCrLf
     End If
         
-Catch:
+catch:
     If Err.Number <> 0 Then
         Debug.Print (Now & " - Ocurrio un error: " & Err.Description)
         tstResult = tstResult & vbCrLf & "  | arrTmp6(" & colu & "," & indx & ") " & vbCrLf & " SQL6: " & SQL6 & vbCrLf
@@ -941,7 +945,7 @@ End Function
 
 '''Obtiene el estatus de la LTL que se encuentra registrado en BD's sin tomar en cuenta ninguna otra condición:
 Private Function obtenerEstatusSinDocumentar(ByVal wTalonRastreo As String)
-On Error GoTo Catch
+On Error GoTo catch
     SQL = " SELECT WELSTATUS,WELFACTURA,WELCLAVE,WELCONS_GENERAL,WEL_TALON_RASTREO,WEL_FIRMA FROM WEB_LTL WHERE WEL_TALON_RASTREO = '" & wTalonRastreo & "'   " & vbCrLf
     
     rst2.Open SQL
@@ -962,7 +966,7 @@ On Error GoTo Catch
         Wend
     End If
     
-Catch:
+catch:
     rst2.Close
     
     If Err.Number <> 0 Then
@@ -974,7 +978,7 @@ Catch:
 End Function
 
 Private Function ObtenerEstatusSinDocumentarCD(wTalonRastreo)
-On Error GoTo Catch
+On Error GoTo catch
    SQL = " SELECT " & vbCrLf
         SQL = SQL & "   WCDSTATUS " & vbCrLf
         SQL = SQL & " , WCDFACTURA " & vbCrLf
@@ -1000,7 +1004,7 @@ On Error GoTo Catch
         Wend
     End If
     
-Catch:
+catch:
     rst3.Close
     
     If Err.Number <> 0 Then
@@ -1013,7 +1017,7 @@ End Function
 
 '''Funcionalidad que indica si una operación / movimiento del talón es VAS, LTL ó StandBy:
 Private Function obtenerTipoOperacion(wTalonRastreo As String)
-	On Error GoTo Catch
+        On Error GoTo catch
     SQL = "SELECT LPAD(WELCONS_GENERAL, 7, '0') || '-' || WEL_CLICLEF FROM WEB_LTL WHERE WEL_TALON_RASTREO = '" & wTalonRastreo & "'"
     
     rsT5.Open SQL
@@ -1034,7 +1038,7 @@ Private Function obtenerTipoOperacion(wTalonRastreo As String)
     SQL = SQL & "   AND  CROSS.TDCD_ALLCLAVE    =   CEDIS.ALLCLAVE  " & vbCrLf
     SQL = SQL & " ORDER BY  CROSS.TDCDFECHA_BASE    " & vbCrLf
     
-Catch:
+catch:
     rsT5.Close
     
     If Err.Number <> 0 Then
@@ -1045,7 +1049,7 @@ End Function
 
 Private Function ordenarTracking(arrInfo)
     Dim arrTmp, x, y, z
-	On Error GoTo Catch
+        On Error GoTo catch
     If IsArray(arrInfo) Then
         ReDim arrTmp((UBound(arrInfo, 2) + 2) * 10)
         y = 0
@@ -1059,7 +1063,7 @@ Private Function ordenarTracking(arrInfo)
         arrTmp = arrInfo
     End If
 
-Catch:
+catch:
     If Err.Number <> 0 Then
         Debug.Print (Now & " - Ocurrio un error: " & Err.Description)
         tstResult = tstResult & "|ordenarTracking(catch):" & Err.Description
@@ -1070,7 +1074,7 @@ End Function
 
 Private Function esArregloConElementos(arrInfo) As Boolean
     Dim numElementos As Double
-    On Error GoTo Catch:
+    On Error GoTo catch:
     
     If IsArray(arrInfo) = True Then
         numElementos = UBound(arrInfo)
@@ -1084,7 +1088,7 @@ Private Function esArregloConElementos(arrInfo) As Boolean
         esArregloConElementos = False
     End If
 
-Catch:
+catch:
     If Err.Number <> 0 Then
         numElementos = -1
         esArregloConElementos = False
@@ -1096,7 +1100,7 @@ Function EsGuiaCancelada(sGuia_Firma) As Boolean
     Dim arrInfo() As String
     result = False
     
-    On Error GoTo Catch
+    On Error GoTo catch
     
     arrInfo = obtenerEstatusSinDocumentar(sGuia_Firma)
     
@@ -1114,7 +1118,7 @@ Function EsGuiaCancelada(sGuia_Firma) As Boolean
         End If
     End If
     
-Catch:
+catch:
     If Err.Number <> 0 Then
         Debug.Print (Now & " - Ocurrio un error: " & Err.Description)
         tstResult = tstResult & "|EsGuiaCancelada(catch):" & Err.Description
@@ -1128,7 +1132,7 @@ Function GuiaEnStndBy(sGuia_Firma As String) As Boolean
     Dim arrInfo() As String
     result = False
     
-    On Error GoTo Catch
+    On Error GoTo catch
     
     arrInfo = obtenerEstatusSinDocumentar(sGuia_Firma)
     
@@ -1146,7 +1150,7 @@ Function GuiaEnStndBy(sGuia_Firma As String) As Boolean
         End If
     End If
         
-Catch:
+catch:
     If Err.Number <> 0 Then
         Debug.Print (Now & " - Ocurrio un error: " & Err.Description)
         tstResult = tstResult & "|GuiaEnStndBy(catch):" & Err.Description
@@ -1162,7 +1166,7 @@ Function GuiaEntregada(sGuia_Firma As String) As Boolean
     Dim iIncidencia_ent As Integer
     Dim sFecha_Entrega_ent As String, sTDcdClave_ent As String
     
-    On Error GoTo Catch
+    On Error GoTo catch
     
     result_ent = False
     sTDcdClave_ent = ""
@@ -1193,7 +1197,7 @@ Function GuiaEntregada(sGuia_Firma As String) As Boolean
         End If
     End If
             
-Catch:
+catch:
     If Err.Number <> 0 Then
         Debug.Print (Now & " - Ocurrio un error: " & Err.Description)
         tstResult = tstResult & "|GuiaEntregada(catch):" & Err.Description
@@ -1207,7 +1211,7 @@ Function GetInfoAVC(pedimento As String, aduana As String, cliente As String, Op
     Dim servidor As String
     servidor = "\\192.168.0.103\"
     
-    On Error GoTo Catch
+    On Error GoTo catch
     SQL = "SELECT  DISTINCT EDOCSAT.DSA_SGECLAVE DSA_SGECLAVE, REPLACE(EDOCSAT.DSACARPETA,'/','\') DSACARPETA, EDOCSAT.DSAARCHIVO DSAARCHIVO " & vbCrLf
     SQL = SQL & " FROM EDOCUMENTOS_SAT EDOCSAT " & vbCrLf
     SQL = SQL & "INNER JOIN ESAAI_M3_GENERAL SGE  ON SGE.SGECLAVE =  EDOCSAT.DSA_SGECLAVE " & vbCrLf
@@ -1253,7 +1257,7 @@ Function GetInfoAVC(pedimento As String, aduana As String, cliente As String, Op
     End If
     rsAVC.Close
     
-Catch:
+catch:
     If Err.Number <> 0 Then
         Debug.Print (Now & " - Ocurrio un error: " & Err.Description)
         GetInfoAVC = ""
@@ -1263,7 +1267,7 @@ End Function
 'Función para concatenar los resultados del query en una sola cadena
 '''NOTA: el query debe de retornar un solo campo
 Function GetQueryString(ByVal sql_str As String)
-    On Error GoTo Catch
+    On Error GoTo catch
     str_result = ""
     Dim varTest As String
     varTest = ""
@@ -1290,7 +1294,7 @@ Function GetQueryString(ByVal sql_str As String)
         rs_str.MoveNext
     Loop
     rs_str.Close
-Catch:
+catch:
     If Err.Number <> 0 Then
         Debug.Print (Now & " - Ocurrio un error: " & Err.Description)
         str_result = ""
@@ -1299,19 +1303,19 @@ Catch:
 End Function
 
 Function ValidaNombreArchivo(ByVal idRep As String)
-    Dim res As Boolean
-    res = True
+    Dim Res As Boolean
+    Res = True
     If idRep = "252" Or idRep = "253" Or idRep = "342" Or idRep = "343" Or idRep = "344" Then
-        res = False
+        Res = False
     End If
-    ValidaNombreArchivo = res
+    ValidaNombreArchivo = Res
 End Function
 
 Function cliente_con_seguro(CliClef)
-        Dim res, sqlSeguro, arrSeguro, iCveEmpresa, iCCOClave
+        Dim Res, sqlSeguro, arrSeguro, iCveEmpresa, iCCOClave
         Dim rs_str
         
-        res = False
+        Res = False
         sqlSeguro = ""
         iCCOClave = -1
         
@@ -1350,10 +1354,10 @@ Function cliente_con_seguro(CliClef)
         rs_str.Close
         
         If iCCOClave > 0 Then
-                res = True
+                Res = True
         End If
         
-        cliente_con_seguro = res
+        cliente_con_seguro = Res
 End Function
 Function obtener_clave_empresa(ByVal CliClef As String) As Double
     Dim sqlEmpresa As String, iCveEmpresa As Double
@@ -1361,18 +1365,18 @@ Function obtener_clave_empresa(ByVal CliClef As String) As Double
     
     iCveEmpresa = -1
     sqlEmpresa = ""
-	
+        
     sqlEmpresa = sqlEmpresa & " SELECT  CET_EMPCLAVE CVE_EMPRESA " & vbCrLf
     sqlEmpresa = sqlEmpresa & " FROM    ECLIENT_EMPRESA_TRADING LIGA " & vbCrLf
     sqlEmpresa = sqlEmpresa & " WHERE   1=1 " & vbCrLf
     sqlEmpresa = sqlEmpresa & " AND LIGA.CET_CLICLEF = '" & CliClef & "' " & vbCrLf
     
-	Set rs_str = Nothing
-	Set rs_str = New ADODB.Recordset
-	rs_str.CursorLocation = adUseClient
-	rs_str.CursorType = adOpenForwardOnly
-	rs_str.LockType = adLockReadOnly
-	rs_str.ActiveConnection = Db_link_orfeo
+        Set rs_str = Nothing
+        Set rs_str = New ADODB.Recordset
+        rs_str.CursorLocation = adUseClient
+        rs_str.CursorType = adOpenForwardOnly
+        rs_str.LockType = adLockReadOnly
+        rs_str.ActiveConnection = Db_link_orfeo
     
     rs_str.Open sqlEmpresa
     If Not rs_str.EOF Then
@@ -1383,155 +1387,156 @@ Function obtener_clave_empresa(ByVal CliClef As String) As Double
     obtener_clave_empresa = iCveEmpresa
 End Function
 Function valida_valor_mercancia(val_mercancia As String)
-    Dim res As Integer
+    Dim Res As Integer
     
-	res = 0
-	
-	If val_mercancia = "" Then
-		''la variable se encuentra vacia 
-		res = -1
+        Res = 0
+        
+        If val_mercancia = "" Then
+                ''la variable se encuentra vacia
+                Res = -1
     ElseIf Not IsNumeric(val_mercancia) Then
-        '' la variable  no es numerica 
-		res = -2
+        '' la variable  no es numerica
+                Res = -2
     ElseIf CDbl(val_mercancia) <= 0 Then
-        '' la variable contiene un número negativo o es igual a 0 
-		res = -3
-	Else 
-		res = 1
+        '' la variable contiene un número negativo o es igual a 0
+                Res = -3
+        Else
+                Res = 1
     End If
     
-	valida_valor_mercancia = res
+        valida_valor_mercancia = Res
 End Function
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Function obtener_nui_disponible(ByVal num_client As String) As Double
-	Dim res As Double
-	Dim sqlNui, rs_Nui
-	On Error GoTo catch
-	
-	res = -1
-	sqlNui = ""
-	Set rs_Nui = Nothing
-	Set rs_Nui = New ADODB.Recordset
-	rs_Nui.CursorLocation = adUseClient
-	rs_Nui.CursorType = adOpenForwardOnly
-	rs_Nui.LockType = adLockReadOnly
-	rs_Nui.ActiveConnection = Db_link_orfeo
-	
-	sqlNui = sqlNui & " SELECT	MIN(WEL.WELCLAVE) NUI " & vbCrLf
-	sqlNui = sqlNui & " FROM	WEB_LTL WEL " & vbCrLf
-	sqlNui = sqlNui & " WHERE	WEL.WEL_CLICLEF	=	'" & num_client & "' " & vbCrLf
-	
-	rs_Nui.Open sqlNui
+        Dim Res As Double
+        Dim SQLnui, rs_Nui
+        On Error GoTo catch
+        
+        Res = -1
+        SQLnui = ""
+        Set rs_Nui = Nothing
+        Set rs_Nui = New ADODB.Recordset
+        rs_Nui.CursorLocation = adUseClient
+        rs_Nui.CursorType = adOpenForwardOnly
+        rs_Nui.LockType = adLockReadOnly
+        rs_Nui.ActiveConnection = Db_link_orfeo
+        
+        SQLnui = SQLnui & " SELECT      MIN(WEL.WELCLAVE) NUI " & vbCrLf
+        SQLnui = SQLnui & " FROM        WEB_LTL WEL " & vbCrLf
+        SQLnui = SQLnui & " WHERE       WEL.WEL_CLICLEF =       '" & num_client & "' " & vbCrLf
+        SQLnui = SQLnui & " AND         WEL.WELSTATUS = 3" & vbCrLf
+        
+        rs_Nui.Open SQLnui
     If Not rs_Nui.EOF Then
-        res = CDbl(rs_Nui.Fields(0))
+        Res = CDbl(rs_Nui.Fields(0))
     End If
 catch:
-	rs_Nui.Close
-	obtener_nui_disponible = res
+        rs_Nui.Close
+        obtener_nui_disponible = Res
 End Function
 Function es_captura_con_factura(ByVal num_client As String) As Boolean
-	Dim res As Boolean
-	Dim iConFactura, sqlConFactura, rs_con_f
-	On Error GoTo catch
+        Dim Res As Boolean
+        Dim iConFactura, sqlConFactura, rs_con_f
+        On Error GoTo catch
 
-	res = False
-	iConFactura = -1
-	sqlConFactura = ""
-	Set rs_con_f = Nothing
-	Set rs_con_f = New ADODB.Recordset
-	rs_con_f.CursorLocation = adUseClient
-	rs_con_f.CursorType = adOpenForwardOnly
-	rs_con_f.LockType = adLockReadOnly
-	rs_con_f.ActiveConnection = Db_link_orfeo
+        Res = False
+        iConFactura = -1
+        sqlConFactura = ""
+        Set rs_con_f = Nothing
+        Set rs_con_f = New ADODB.Recordset
+        rs_con_f.CursorLocation = adUseClient
+        rs_con_f.CursorType = adOpenForwardOnly
+        rs_con_f.LockType = adLockReadOnly
+        rs_con_f.ActiveConnection = Db_link_orfeo
 
-	sqlConFactura = sqlConFactura & " SELECT	NVL(TIPO_DOCUMENTACION,-1) CON_FACTURA " & vbCrLf
-	sqlConFactura = sqlConFactura & " FROM		TB_CONFIG_CLIENTE_DIST " & vbCrLf
-	sqlConFactura = sqlConFactura & " WHERE		ID_CLIENTE	=	'" & num_client & "' " & vbCrLf
+        sqlConFactura = sqlConFactura & " SELECT        NVL(TIPO_DOCUMENTACION,-1) CON_FACTURA " & vbCrLf
+        sqlConFactura = sqlConFactura & " FROM          TB_CONFIG_CLIENTE_DIST " & vbCrLf
+        sqlConFactura = sqlConFactura & " WHERE         ID_CLIENTE      =       '" & num_client & "' " & vbCrLf
 
-	rs_con_f.Open sqlConFactura
+        rs_con_f.Open sqlConFactura
     If Not rs_con_f.EOF Then
         iConFactura = CDbl(rs_con_f.Fields(0))
     End If
 catch:
     rs_con_f.Close
 
-	If iConFactura = 1 Then
-		res = True
-	End If
+        If iConFactura = 1 Then
+                Res = True
+        End If
 
-	es_captura_con_factura = res
+        es_captura_con_factura = Res
 End Function
 Function es_captura_sin_factura(ByVal num_client As String) As Boolean
-	Dim res As Boolean
-	Dim iSinFactura, sqlSinFactura, rs_sin_f
-	On Error GoTo catch
+        Dim Res As Boolean
+        Dim iSinFactura, sqlSinFactura, rs_sin_f
+        On Error GoTo catch
 
-	res = False
-	iSinFactura = -1
-	sqlSinFactura = ""
-	Set rs_sin_f = Nothing
-	Set rs_sin_f = New ADODB.Recordset
-	rs_sin_f.CursorLocation = adUseClient
-	rs_sin_f.CursorType = adOpenForwardOnly
-	rs_sin_f.LockType = adLockReadOnly
-	rs_sin_f.ActiveConnection = Db_link_orfeo
+        Res = False
+        iSinFactura = -1
+        sqlSinFactura = ""
+        Set rs_sin_f = Nothing
+        Set rs_sin_f = New ADODB.Recordset
+        rs_sin_f.CursorLocation = adUseClient
+        rs_sin_f.CursorType = adOpenForwardOnly
+        rs_sin_f.LockType = adLockReadOnly
+        rs_sin_f.ActiveConnection = Db_link_orfeo
 
-	sqlSinFactura = sqlSinFactura & " SELECT	NVL(TIPO_DOCUMENTACION,-1) SIN_FACTURA " & vbCrLf
-	sqlSinFactura = sqlSinFactura & " FROM		TB_CONFIG_CLIENTE_DIST " & vbCrLf
-	sqlSinFactura = sqlSinFactura & " WHERE		ID_CLIENTE	=	'" & num_client & "' " & vbCrLf
+        sqlSinFactura = sqlSinFactura & " SELECT        NVL(TIPO_DOCUMENTACION,-1) SIN_FACTURA " & vbCrLf
+        sqlSinFactura = sqlSinFactura & " FROM          TB_CONFIG_CLIENTE_DIST " & vbCrLf
+        sqlSinFactura = sqlSinFactura & " WHERE         ID_CLIENTE      =       '" & num_client & "' " & vbCrLf
 
-	rs_sin_f.Open sqlSinFactura
+        rs_sin_f.Open sqlSinFactura
     If Not rs_sin_f.EOF Then
         iSinFactura = CDbl(rs_sin_f.Fields(0))
     End If
 catch:
     rs_sin_f.Close
 
-	If iSinFactura = 0 Then
-		res = True
-	End If
+        If iSinFactura = 0 Then
+                Res = True
+        End If
 
-	es_captura_sin_factura = res
+        es_captura_sin_factura = Res
 End Function
 Function es_captura_con_doc_fuente(ByVal num_client As String) As Boolean
-	Dim res As Boolean
-	Dim iConDocFuente, sqlConDocFuente, rs_con_df
-	On Error GoTo catch
-	
-	res = False
-	iConDocFuente = -1
-	sqlConDocFuente = ""
-	Set rs_con_df = Nothing
-	Set rs_con_df = New ADODB.Recordset
-	rs_con_df.CursorLocation = adUseClient
-	rs_con_df.CursorType = adOpenForwardOnly
-	rs_con_df.LockType = adLockReadOnly
-	rs_con_df.ActiveConnection = Db_link_orfeo
-	
-	sqlConDocFuente = sqlConDocFuente & " SELECT	NVL(TIPO_DOCUMENTACION,-1) CON_DOCUMENTO_FUENTE " & vbCrLf
-	sqlConDocFuente = sqlConDocFuente & " FROM		TB_CONFIG_CLIENTE_DIST " & vbCrLf
-	sqlConDocFuente = sqlConDocFuente & " WHERE		ID_CLIENTE	=	'" & num_client & "' " & vbCrLf
-	
-	rs_con_df.Open sqlConDocFuente
+        Dim Res As Boolean
+        Dim iConDocFuente, sqlConDocFuente, rs_con_df
+        On Error GoTo catch
+        
+        Res = False
+        iConDocFuente = -1
+        sqlConDocFuente = ""
+        Set rs_con_df = Nothing
+        Set rs_con_df = New ADODB.Recordset
+        rs_con_df.CursorLocation = adUseClient
+        rs_con_df.CursorType = adOpenForwardOnly
+        rs_con_df.LockType = adLockReadOnly
+        rs_con_df.ActiveConnection = Db_link_orfeo
+        
+        sqlConDocFuente = sqlConDocFuente & " SELECT    NVL(TIPO_DOCUMENTACION,-1) CON_DOCUMENTO_FUENTE " & vbCrLf
+        sqlConDocFuente = sqlConDocFuente & " FROM              TB_CONFIG_CLIENTE_DIST " & vbCrLf
+        sqlConDocFuente = sqlConDocFuente & " WHERE             ID_CLIENTE      =       '" & num_client & "' " & vbCrLf
+        
+        rs_con_df.Open sqlConDocFuente
     If Not rs_con_df.EOF Then
         iConDocFuente = CDbl(rs_con_df.Fields(0))
     End If
 catch:
     rs_con_df.Close
 
-	If iConDocFuente = 2 Then
-		res = True
-	End If
-	
-	es_captura_con_doc_fuente = res
+        If iConDocFuente = 2 Then
+                Res = True
+        End If
+        
+        es_captura_con_doc_fuente = Res
 End Function
 Function validar_destinatario(ByVal clave_destino_cliente As String, ByVal num_client As String) As Double
-	Dim res As Double
+        Dim Res As Double
     Dim SQL As String
     Dim rs_dest As New ADODB.Recordset
-	On Error GoTo catch
+        On Error GoTo catch
 
-    res = -1
+    Res = -1
     SQL = ""
     Set rs_dest = New ADODB.Recordset
     rs_dest.CursorLocation = adUseClient
@@ -1539,362 +1544,362 @@ Function validar_destinatario(ByVal clave_destino_cliente As String, ByVal num_c
     rs_dest.LockType = adLockBatchOptimistic
     rs_dest.ActiveConnection = Db_link_orfeo
 
-	SQL = SQL & " SELECT	CCL.CCLCLAVE CCLCLAVE " & vbCrLf
-	SQL = SQL & " FROM	EDIRECCION_ENTR_CLIENTE_LIGA DIL " & vbCrLf
-	SQL = SQL & " 	INNER	JOIN	EDIRECCIONES_ENTREGA DIE	ON	DIE.DIECLAVE	=	DIL.DEC_DIECLAVE " & vbCrLf
-	SQL = SQL & " 	INNER	JOIN	ECIUDADES CIU				ON	CIU.VILCLEF		=	DIE.DIEVILLE " & vbCrLf
-	SQL = SQL & " 	INNER	JOIN	EESTADOS EST				ON	EST.ESTESTADO	=	CIU.VIL_ESTESTADO " & vbCrLf
-	SQL = SQL & " 	INNER	JOIN	ECLIENT_CLIENTE CCL			ON	CCL.CCLCLAVE	=	DIE.DIE_CCLCLAVE " & vbCrLf
-	SQL = SQL & " 	INNER	JOIN	EDESTINOS_POR_RUTA DER		ON	DER.DER_VILCLEF	=	CIU.VILCLEF " & vbCrLf
-	SQL = SQL & " WHERE	1=1 " & vbCrLf
-	SQL = SQL & " 	AND	CCL.CCL_STATUS		=	1 " & vbCrLf
-	SQL = SQL & " 	AND	DIE.DIE_STATUS		=	1 " & vbCrLf
-	SQL = SQL & " 	AND	EST.EST_PAYCLEF		=	'N3' " & vbCrLf
-	SQL = SQL & " 	AND	DER.DER_ALLCLAVE	>	0 " & vbCrLf
-	SQL = SQL & " 	AND	SF_LOGIS_CLIENTE_RESTRIC(DIL.DEC_CLICLEF, DER.DER_TIPO_ENTREGA)	=	1 " & vbCrLf
-	SQL = SQL & " 	AND	DIL.DEC_NUM_DIR_CLIENTE	=	'" & clave_destino_cliente & "' " & vbCrLf
-	SQL = SQL & " 	AND	DIL.DEC_CLICLEF			=	'" & num_client & "' " & vbCrLf
+        SQL = SQL & " SELECT    CCL.CCLCLAVE CCLCLAVE " & vbCrLf
+        SQL = SQL & " FROM      EDIRECCION_ENTR_CLIENTE_LIGA DIL " & vbCrLf
+        SQL = SQL & "   INNER   JOIN    EDIRECCIONES_ENTREGA DIE        ON      DIE.DIECLAVE    =       DIL.DEC_DIECLAVE " & vbCrLf
+        SQL = SQL & "   INNER   JOIN    ECIUDADES CIU                           ON      CIU.VILCLEF             =       DIE.DIEVILLE " & vbCrLf
+        SQL = SQL & "   INNER   JOIN    EESTADOS EST                            ON      EST.ESTESTADO   =       CIU.VIL_ESTESTADO " & vbCrLf
+        SQL = SQL & "   INNER   JOIN    ECLIENT_CLIENTE CCL                     ON      CCL.CCLCLAVE    =       DIE.DIE_CCLCLAVE " & vbCrLf
+        SQL = SQL & "   INNER   JOIN    EDESTINOS_POR_RUTA DER          ON      DER.DER_VILCLEF =       CIU.VILCLEF " & vbCrLf
+        SQL = SQL & " WHERE     1=1 " & vbCrLf
+        SQL = SQL & "   AND     CCL.CCL_STATUS          =       1 " & vbCrLf
+        SQL = SQL & "   AND     DIE.DIE_STATUS          =       1 " & vbCrLf
+        SQL = SQL & "   AND     EST.EST_PAYCLEF         =       'N3' " & vbCrLf
+        SQL = SQL & "   AND     DER.DER_ALLCLAVE        >       0 " & vbCrLf
+        SQL = SQL & "   AND     SF_LOGIS_CLIENTE_RESTRIC(DIL.DEC_CLICLEF, DER.DER_TIPO_ENTREGA) =       1 " & vbCrLf
+        SQL = SQL & "   AND     DIL.DEC_NUM_DIR_CLIENTE =       '" & clave_destino_cliente & "' " & vbCrLf
+        SQL = SQL & "   AND     DIL.DEC_CLICLEF                 =       '" & num_client & "' " & vbCrLf
 
-	rs_dest.Open SQL
-	If Not rs_dest.EOF Then
-		res = CDbl(rs_dest.Fields("CCLCLAVE"))
-	End If
+        rs_dest.Open SQL
+        If Not rs_dest.EOF Then
+                Res = CDbl(rs_dest.Fields("CCLCLAVE"))
+        End If
 catch:
     rs_dest.Close
     Set rs_dest = Nothing
 
-    validar_destinatario = res
+    validar_destinatario = Res
 End Function
 Function obtener_tipo_tarifa_cliente(ByVal num_client As String) As Double
-	' ' ' ' ' ' ' ' ' ' ' ' ' ' '
-	'	1	Peso/Volumen		'
-	' - - - - - - - - - - - - - '
-	'	2	Caja/Tarima			'
-	' - - - - - - - - - - - - - '
-	'	3	Bulto Constitutivo	'
-	' - - - - - - - - - - - - - '
-	'	4	Solo Tarima			'
-	' ' ' ' ' ' ' ' ' ' ' ' ' ' '
-	
-	Dim res As Double
+        ' ' ' ' ' ' ' ' ' ' ' ' ' ' '
+        '       1       Peso/Volumen            '
+        ' - - - - - - - - - - - - - '
+        '       2       Caja/Tarima                     '
+        ' - - - - - - - - - - - - - '
+        '       3       Bulto Constitutivo      '
+        ' - - - - - - - - - - - - - '
+        '       4       Solo Tarima                     '
+        ' ' ' ' ' ' ' ' ' ' ' ' ' ' '
+        
+        Dim Res As Double
     Dim SQL As String
     Dim rs_tar As New ADODB.Recordset
-	On Error GoTo catch
+        On Error GoTo catch
 
-    res = -1
+    Res = -1
     SQL = ""
     Set rs_tar = New ADODB.Recordset
     rs_tar.CursorLocation = adUseClient
     rs_tar.CursorType = adOpenForwardOnly
     rs_tar.LockType = adLockBatchOptimistic
     rs_tar.ActiveConnection = Db_link_orfeo
-	
-	SQL = SQL & " SELECT	 DISTINCT " & vbCrLf
-	SQL = SQL & " 		 CCD.ID_TIPO_TARIFA ID_TIPO_TARIFA " & vbCrLf
-	SQL = SQL & " 		,TF.NOMBRE NOMBRE " & vbCrLf
-	SQL = SQL & " FROM	 LOGIS.TB_CONFIG_CLIENTE_DIST CCD " & vbCrLf
-	SQL = SQL & " 	INNER JOIN	LOGIS.TB_TIPO_TARIFA_DIST TF " & vbCrLf
-	SQL = SQL & " 		ON	CCD.ID_TIPO_TARIFA	=	TF.ID_TIPO_TARIFA " & vbCrLf
-	SQL = SQL & " WHERE	CCD.ID_CLIENTE	=	'" & num_client & "' " & vbCrLf
+        
+        SQL = SQL & " SELECT     DISTINCT " & vbCrLf
+        SQL = SQL & "            CCD.ID_TIPO_TARIFA ID_TIPO_TARIFA " & vbCrLf
+        SQL = SQL & "           ,TF.NOMBRE NOMBRE " & vbCrLf
+        SQL = SQL & " FROM       LOGIS.TB_CONFIG_CLIENTE_DIST CCD " & vbCrLf
+        SQL = SQL & "   INNER JOIN      LOGIS.TB_TIPO_TARIFA_DIST TF " & vbCrLf
+        SQL = SQL & "           ON      CCD.ID_TIPO_TARIFA      =       TF.ID_TIPO_TARIFA " & vbCrLf
+        SQL = SQL & " WHERE     CCD.ID_CLIENTE  =       '" & num_client & "' " & vbCrLf
 
-	rs_tar.Open SQL
-	If Not rs_tar.EOF Then
-		res = CDbl(rs_tar.Fields("ID_TIPO_TARIFA"))
-	End If
+        rs_tar.Open SQL
+        If Not rs_tar.EOF Then
+                Res = CDbl(rs_tar.Fields("ID_TIPO_TARIFA"))
+        End If
 catch:
-	rs_tar.Close
+        rs_tar.Close
     Set rs_tar = Nothing
-	
-	obtener_tipo_tarifa_cliente = res
+        
+        obtener_tipo_tarifa_cliente = Res
 End Function
 Function validar_bultos_totales(ByVal bultos_totales As Double, ByVal bultos_granel As Double, ByVal cantidad_tarimas As Double, ByVal bultos_constitutivos_tarimas As Double) As Boolean
-	Dim res As Boolean
-	On Error GoTo catch
-	
-	res = False
-	
-	If bultos_totales = (bultos_granel + cantidad_tarimas) Then
-		res = True
-	End If
+        Dim Res As Boolean
+        On Error GoTo catch
+        
+        Res = False
+        
+        If bultos_totales = (bultos_granel + cantidad_tarimas) Then
+                Res = True
+        End If
 
 catch:
-	validar_bultos_totales = res
+        validar_bultos_totales = Res
 End Function
 Function validar_cdad_bultos_granel(ByVal bultos_granel As String, ByVal num_client As String) As Boolean
-	Dim res As Boolean
-	Dim cdad_bultos As Double
-	Dim es_cliente_por_bulto As Boolean
-	On Error GoTo catch
-	
-	res = False
-	cdad_bultos = -1
-	
-	If obtener_tipo_tarifa_cliente(num_client) = 3 Then
-		If bultos_granel <> "" Then
-			cdad_bultos = CDbl(bultos_granel)
-			
-			If cdad_bultos >= 0 Then
-				res = True
-			End If
-		End If
-	Else
-		If bultos_granel = "" Then
-			res = True
-		End If
-	End If
-	
+        Dim Res As Boolean
+        Dim cdad_bultos As Double
+        Dim es_cliente_por_bulto As Boolean
+        On Error GoTo catch
+        
+        Res = False
+        cdad_bultos = -1
+        
+        If obtener_tipo_tarifa_cliente(num_client) = 3 Then
+                If bultos_granel <> "" Then
+                        cdad_bultos = CDbl(bultos_granel)
+                        
+                        If cdad_bultos >= 0 Then
+                                Res = True
+                        End If
+                End If
+        Else
+                If bultos_granel = "" Then
+                        Res = True
+                End If
+        End If
+        
 catch:
-	validar_cdad_bultos_granel = res
+        validar_cdad_bultos_granel = Res
 End Function
 Function validar_cdad_tarimas(ByVal cdad_tarimas As String) As Boolean
-	Dim res As Boolean
-	Dim cdad_bultos As Double
-	On Error GoTo catch
-	
-	res = False
-	cdad_bultos = -1
-	
-	If cdad_tarimas <> "" Then
-		cdad_bultos = CDbl(cdad_tarimas)
-		
-		If cdad_bultos >= 0 Then
-			res = True
-		End If
-	End If
-	
+        Dim Res As Boolean
+        Dim cdad_bultos As Double
+        On Error GoTo catch
+        
+        Res = False
+        cdad_bultos = -1
+        
+        If cdad_tarimas <> "" Then
+                cdad_bultos = CDbl(cdad_tarimas)
+                
+                If cdad_bultos >= 0 Then
+                        Res = True
+                End If
+        End If
+        
 catch:
-	validar_cdad_tarimas = res
+        validar_cdad_tarimas = Res
 End Function
 Function validar_bultos_por_tarima(ByVal cdad_bultos_tarima As String) As Boolean
-	Dim res As Boolean
-	Dim cdad_bultos As Double
-	On Error GoTo catch
-	
-	res = False
-	cdad_bultos = -1
-	
-	If cdad_bultos_tarima <> "" Then
-		cdad_bultos = CDbl(cdad_bultos_tarima)
-		
-		If cdad_bultos >= 0 Then
-			res = True
-		End If
-	Else
-		res = True
-	End If
-	
+        Dim Res As Boolean
+        Dim cdad_bultos As Double
+        On Error GoTo catch
+        
+        Res = False
+        cdad_bultos = -1
+        
+        If cdad_bultos_tarima <> "" Then
+                cdad_bultos = CDbl(cdad_bultos_tarima)
+                
+                If cdad_bultos >= 0 Then
+                        Res = True
+                End If
+        Else
+                Res = True
+        End If
+        
 catch:
-	validar_bultos_por_tarima = res
+        validar_bultos_por_tarima = Res
 End Function
 Function validar_valor_mercancia(ByVal valor_mercancia As String, ByVal num_client As String) As Boolean
-	Dim res As Boolean
-	Dim val_merc As Double
-	On Error GoTo catch
-	
-	res = False
-	val_merc = -1
-	
-	If cliente_con_seguro(num_client) = True Then
-		val_merc = CDbl(valor_mercancia)
-		
-		If val_merc >= 0 Then
-			res = True
-		End If
-	Else
-		res = True
-	End If
-	
+        Dim Res As Boolean
+        Dim val_merc As Double
+        On Error GoTo catch
+        
+        Res = False
+        val_merc = -1
+        
+        If cliente_con_seguro(num_client) = True Then
+                val_merc = CDbl(valor_mercancia)
+                
+                If val_merc >= 0 Then
+                        Res = True
+                End If
+        Else
+                Res = True
+        End If
+        
 catch:
-	validar_valor_mercancia = res
+        validar_valor_mercancia = Res
 End Function
 Function validar_observaciones(ByVal txt_observaciones As String) As Boolean
-	Dim res As Boolean
-	Dim length As Double
-	On Error GoTo catch
-	
-	res = False
-	length = 0
-	
-	If txt_observaciones <> "" Then
-		length = len(txt_observaciones)
-	End If
-	
-	If length <= 80 Then
-		res = True
-	End If
-	
+        Dim Res As Boolean
+        Dim length As Double
+        On Error GoTo catch
+        
+        Res = False
+        length = 0
+        
+        If txt_observaciones <> "" Then
+                length = Len(txt_observaciones)
+        End If
+        
+        If length <= 80 Then
+                Res = True
+        End If
+        
 catch:
-	validar_observaciones = res
+        validar_observaciones = Res
 End Function
 Function obtener_condiciones_entrega(ByVal txt As String) As String
-	Dim res As String
-	On Error GoTo catch
-	
-	res = "N"
-	
-	If UCase(txt) = UCase("Entrega a domicilio") Or UCase(txt) = UCase("entrega_domicilio") Then
-		res = "S"
-	End If
-	
+        Dim Res As String
+        On Error GoTo catch
+        
+        Res = "N"
+        
+        If UCase(txt) = UCase("Entrega a domicilio") Or UCase(txt) = UCase("entrega_domicilio") Then
+                Res = "S"
+        End If
+        
 catch:
-	obtener_condiciones_entrega = res
+        obtener_condiciones_entrega = Res
 End Function
 Function obtener_dice_contener(ByVal num_client As String) As String
-	Dim res As String
+        Dim Res As String
     Dim SQL As String
     Dim rs_cont As New ADODB.Recordset
-	On Error GoTo catch
+        On Error GoTo catch
 
-    res = ""
+    Res = ""
     SQL = ""
     Set rs_cont = New ADODB.Recordset
     rs_cont.CursorLocation = adUseClient
     rs_cont.CursorType = adOpenForwardOnly
     rs_cont.LockType = adLockBatchOptimistic
     rs_cont.ActiveConnection = Db_link_orfeo
-	
-	SQL = SQL & " SELECT	DESC_GEN_DISTRIBUCION DICE_CONTENER " & vbCrLf
-	SQL = SQL & " FROM	TB_ECLIENT_CP " & vbCrLf
-	SQL = SQL & " WHERE	CLICLEF	=	'" & num_client & "' " & vbCrLf
+        
+        SQL = SQL & " SELECT    DESC_GEN_DISTRIBUCION DICE_CONTENER " & vbCrLf
+        SQL = SQL & " FROM      TB_ECLIENT_CP " & vbCrLf
+        SQL = SQL & " WHERE     CLICLEF =       '" & num_client & "' " & vbCrLf
 
-	rs_cont.Open SQL
-	If Not rs_cont.EOF Then
-		res = rs_cont.Fields("DICE_CONTENER")
-	End If
-	
+        rs_cont.Open SQL
+        If Not rs_cont.EOF Then
+                Res = rs_cont.Fields("DICE_CONTENER")
+        End If
+        
 catch:
-	rs_cont.Close
+        rs_cont.Close
     Set rs_cont = Nothing
 
-	obtener_dice_contener = res
+        obtener_dice_contener = Res
 End Function
 Function obtener_recol_domicilio(ByVal num_client As String) As String
-	Dim res As String
+        Dim Res As String
     Dim SQL As String
     Dim rs_reco As New ADODB.Recordset
-	On Error GoTo catch
+        On Error GoTo catch
 
-    res = "N"
-	SQL = ""	
+    Res = "N"
+        SQL = ""
     Set rs_reco = New ADODB.Recordset
     rs_reco.CursorLocation = adUseClient
     rs_reco.CursorType = adOpenForwardOnly
     rs_reco.LockType = adLockBatchOptimistic
     rs_reco.ActiveConnection = Db_link_orfeo
-	
-	SQL = SQL & " SELECT	NVL(RECOLECCION_A_DOMICILIO,0) RECO " & vbCrLf
-	SQL = SQL & " FROM	LOGIS.TB_CONFIG_CLIENTE_DIST CCD " & vbCrLf
-	SQL = SQL & " 	INNER JOIN	LOGIS.TB_TIPO_TARIFA_DIST TF " & vbCrLf
-	SQL = SQL & " 		ON	CCD.ID_TIPO_TARIFA	=	TF.ID_TIPO_TARIFA " & vbCrLf
-	SQL = SQL & " WHERE	CCD.ID_CLIENTE	=	'" & num_client & "' " & vbCrLf
+        
+        SQL = SQL & " SELECT    NVL(RECOLECCION_A_DOMICILIO,0) RECO " & vbCrLf
+        SQL = SQL & " FROM      LOGIS.TB_CONFIG_CLIENTE_DIST CCD " & vbCrLf
+        SQL = SQL & "   INNER JOIN      LOGIS.TB_TIPO_TARIFA_DIST TF " & vbCrLf
+        SQL = SQL & "           ON      CCD.ID_TIPO_TARIFA      =       TF.ID_TIPO_TARIFA " & vbCrLf
+        SQL = SQL & " WHERE     CCD.ID_CLIENTE  =       '" & num_client & "' " & vbCrLf
 
-	rs_reco.Open SQL
-	If Not rs_reco.EOF Then
-		If rs_reco.Fields("RECO") = "1" Then
-			res = "S"
-		End If
-	End If
-	
+        rs_reco.Open SQL
+        If Not rs_reco.EOF Then
+                If rs_reco.Fields("RECO") = "1" Then
+                        Res = "S"
+                End If
+        End If
+        
 catch:
-	rs_reco.Close
+        rs_reco.Close
     Set rs_reco = Nothing
 
-	obtener_recol_domicilio = res
+        obtener_recol_domicilio = Res
 End Function
 Function obtener_prepagado_por_cobrar(ByVal num_client As String) As String
-	Dim res As String
+        Dim Res As String
     Dim SQL As String
     Dim rs_prep As New ADODB.Recordset
-	On Error GoTo catch
+        On Error GoTo catch
 
-    res = "PREPAGADO"
-	SQL = ""	
+    Res = "PREPAGADO"
+        SQL = ""
     Set rs_prep = New ADODB.Recordset
     rs_prep.CursorLocation = adUseClient
     rs_prep.CursorType = adOpenForwardOnly
     rs_prep.LockType = adLockBatchOptimistic
     rs_prep.ActiveConnection = Db_link_orfeo
-	
-	SQL = SQL & " SELECT	UPD.COBRAR_PREPAGO COBRAR_PREPAGO " & vbCrLf
-	SQL = SQL & " FROM	USUARIO_PERMISO_DISTRIBUCION UPD " & vbCrLf
-	SQL = SQL & " WHERE	UPD.NOMBRE_USUARIO	=	'" & num_client & "' " & vbCrLf
+        
+        SQL = SQL & " SELECT    UPD.COBRAR_PREPAGO COBRAR_PREPAGO " & vbCrLf
+        SQL = SQL & " FROM      USUARIO_PERMISO_DISTRIBUCION UPD " & vbCrLf
+        SQL = SQL & " WHERE     UPD.NOMBRE_USUARIO      =       '" & num_client & "' " & vbCrLf
 
-	rs_prep.Open SQL
-	If Not rs_prep.EOF Then
-		If rs_prep.Fields("COBRAR_PREPAGO") = "2" Then
-			res = "POR COBRAR"
-		End If
-	End If
-	
+        rs_prep.Open SQL
+        If Not rs_prep.EOF Then
+                If rs_prep.Fields("COBRAR_PREPAGO") = "2" Then
+                        Res = "POR COBRAR"
+                End If
+        End If
+        
 catch:
-	rs_prep.Close
+        rs_prep.Close
     Set rs_prep = Nothing
 
-	obtener_prepagado_por_cobrar = res
+        obtener_prepagado_por_cobrar = Res
 End Function
 Function validar_cantidad_nuis_disponibles(ByVal num_client As String, ByVal nuis_necesarios As Double) As Boolean
-	Dim res As Boolean
-	On Error GoTo catch
+        Dim Res As Boolean
+        On Error GoTo catch
 
-    res = False
-	If obtener_nuis_disponibles(num_client) >= nuis_necesarios Then
-		res = True
-	End If
-	
+    Res = False
+        If obtener_nuis_disponibles(num_client) >= nuis_necesarios Then
+                Res = True
+        End If
+        
 catch:
-	validar_cantidad_nuis_disponibles = res
+        validar_cantidad_nuis_disponibles = Res
 End Function
 Function obtener_nuis_disponibles(ByVal num_client As String) As Double
-	Dim res As Double
+        Dim Res As Double
     Dim SQL As String
     Dim rs_disp As New ADODB.Recordset
-	On Error GoTo catch
+        On Error GoTo catch
 
-    res = -1
-	SQL = ""	
+    Res = -1
+        SQL = ""
     Set rs_disp = New ADODB.Recordset
     rs_disp.CursorLocation = adUseClient
     rs_disp.CursorType = adOpenForwardOnly
     rs_disp.LockType = adLockBatchOptimistic
     rs_disp.ActiveConnection = Db_link_orfeo
-	
-	SQL = SQL & " SELECT	COUNT(WEL.WELCLAVE) CANTIDAD " & vbCrLf
-	SQL = SQL & " FROM		WEB_LTL WEL " & vbCrLf
-	SQL = SQL & " WHERE		WEL.WELSTATUS	=	3 " & vbCrLf
-	SQL = SQL & " 	AND		WEL.WEL_CLICLEF	=	'" & num_client & "' " & vbCrLf
+        
+        SQL = SQL & " SELECT    COUNT(WEL.WELCLAVE) CANTIDAD " & vbCrLf
+        SQL = SQL & " FROM              WEB_LTL WEL " & vbCrLf
+        SQL = SQL & " WHERE             WEL.WELSTATUS   =       3 " & vbCrLf
+        SQL = SQL & "   AND             WEL.WEL_CLICLEF =       '" & num_client & "' " & vbCrLf
 
-	rs_disp.Open SQL
-	If Not rs_disp.EOF Then
-		If rs_disp.Fields("CANTIDAD") <> "" Then
-			res = CDbl(rs_disp.Fields("CANTIDAD"))
-		End If
-	End If
-	
+        rs_disp.Open SQL
+        If Not rs_disp.EOF Then
+                If rs_disp.Fields("CANTIDAD") <> "" Then
+                        Res = CDbl(rs_disp.Fields("CANTIDAD"))
+                End If
+        End If
+        
 catch:
-	rs_disp.Close
+        rs_disp.Close
     Set rs_disp = Nothing
 
-	obtener_nuis_disponibles = res
+        obtener_nuis_disponibles = Res
 End Function
-Function obtener_destinatario(ByVal num_client As String, ByVal n_client As String, ByRef cclclave As Long, ByRef dieclave As Long, ByRef all_clave_dest As Integer)
+Function obtener_destinatario(ByVal num_client As String, ByVal n_client As String, ByRef cclclave As String, ByRef dieclave As String, ByRef all_clave_dest As Integer)
     Dim SQL As String
     Dim rs As New ADODB.Recordset
-	On Error GoTo catch
+        On Error GoTo catch
 
-	SQL = ""	
+        SQL = ""
     Set rs = New ADODB.Recordset
     rs.CursorLocation = adUseClient
     rs.CursorType = adOpenForwardOnly
     rs.LockType = adLockBatchOptimistic
     rs.ActiveConnection = Db_link_orfeo
     
-	SQL = "SELECT DEC_DIECLAVE, DIE_CCLCLAVE, NVL((SELECT DER_ALLCLAVE FROM EDESTINOS_POR_RUTA WHERE DER_VILCLEF = DIEVILLE AND DER_ALLCLAVE IS NOT NULL AND ROWNUM = 1), 1) ALLCLAVE_DEST "
+        SQL = "SELECT DEC_DIECLAVE, DIE_CCLCLAVE, NVL((SELECT DER_ALLCLAVE FROM EDESTINOS_POR_RUTA WHERE DER_VILCLEF = DIEVILLE AND DER_ALLCLAVE IS NOT NULL AND ROWNUM = 1), 1) ALLCLAVE_DEST "
     SQL = SQL & "   , NVL(DEC_DIECLAVE_ENTREGA, -1) DEC_DIECLAVE_ENTREGA " & vbCrLf
     SQL = SQL & " FROM EDIRECCION_ENTR_CLIENTE_LIGA DECL " & vbCrLf
-	SQL = SQL & " INNER JOIN " & vbCrLf
-	SQL = SQL & " EDIRECCIONES_ENTREGA DE " & vbCrLf
-	SQL = SQL & " ON " & vbCrLf
-	SQL = SQL & "  DECL.DEC_DIECLAVE = DE.DIECLAVE " & vbCrLf
+        SQL = SQL & " INNER JOIN " & vbCrLf
+        SQL = SQL & " EDIRECCIONES_ENTREGA DE " & vbCrLf
+        SQL = SQL & " ON " & vbCrLf
+        SQL = SQL & "  DECL.DEC_DIECLAVE = DE.DIECLAVE " & vbCrLf
 
     SQL = SQL & " WHERE DEC_CLICLEF = '" & Replace(num_client, "'", "''") & "'" & vbCrLf
     SQL = SQL & "   AND DEC_NUM_DIR_CLIENTE = '" & Replace(n_client, "'", "''") & "'" & vbCrLf
@@ -1902,156 +1907,156 @@ Function obtener_destinatario(ByVal num_client As String, ByVal n_client As Stri
 
     SQL = SQL & "   AND EXISTS (" & vbCrLf
     SQL = SQL & "       SELECT NULL FROM EDESTINOS_POR_RUTA DPR" & vbCrLf
-	SQL = SQL & " INNER JOIN " & vbCrLf
-	SQL = SQL & " EDIRECCIONES_ENTREGA DE1 " & vbCrLf
-	SQL = SQL & " ON " & vbCrLf
-	SQL = SQL & " DPR.DER_VILCLEF = DE1.DIEVILLE " & vbCrLf
+        SQL = SQL & " INNER JOIN " & vbCrLf
+        SQL = SQL & " EDIRECCIONES_ENTREGA DE1 " & vbCrLf
+        SQL = SQL & " ON " & vbCrLf
+        SQL = SQL & " DPR.DER_VILCLEF = DE1.DIEVILLE " & vbCrLf
     SQL = SQL & "        WHERE NVL(DER_ALLCLAVE, 1) > 0 " & vbCrLf
     SQL = SQL & "          AND DER_TIPO_ENTREGA NOT IN ('INSEGURO', 'INVALIDO') " & vbCrLf
     SQL = SQL & "          AND SF_LOGIS_CLIENTE_RESTRIC(DEC_CLICLEF, DER_TIPO_ENTREGA) = 1 " & vbCrLf
     SQL = SQL & "       ) " & vbCrLf
 
-	
-	rs.Open SQL
+        
+        rs.Open SQL
     If rs.EOF Then
-        get_direccion_entrega_ltl = "- direccion inexistente, o destino INSEGURO, INVALIDO o TIPO DE ENTREGA no autorizado:" & _
-            " id: " & n_client & vbCrLf 
+        obtener_destinatario = "- direccion inexistente, o destino INSEGURO, INVALIDO o TIPO DE ENTREGA no autorizado:" & _
+            " id: " & n_client & vbCrLf
     ElseIf rs.RecordCount > 1 Then
-        get_direccion_entrega_ltl = "- existe mas de un registro ligado a este numero direccion:" & _
+        obtener_destinatario = "- existe mas de un registro ligado a este numero direccion:" & _
             " id: " & n_client & vbCrLf
     Else
-        get_direccion_entrega_ltl = "ok"
+        obtener_destinatario = "ok"
         cclclave = rs.Fields("DIE_CCLCLAVE")
         dieclave = rs.Fields("DEC_DIECLAVE")
-		all_clave_dest = rs.Fields("ALLCLAVE_DEST")
+        all_clave_dest = rs.Fields("ALLCLAVE_DEST")
     End If
 
 catch:
-	rs.Close
+        rs.Close
     Set rs = Nothing
 End Function
 Function obtener_nombre_usuario(ByVal usuario As String)
-	Dim SQL As String
-	Dim res as String
-	Dim rstNU As New ADODB.Recordset
-	On Error GoTo catch
+        Dim SQL As String
+        Dim Res As String
+        Dim rstNU As New ADODB.Recordset
+        On Error GoTo catch
 
-	res = "DOC_MASIVA"
-	Set rstNU = New ADODB.Recordset
-	rstNU.CursorLocation = adUseClient
-	rstNU.CursorType = adOpenForwardOnly
-	rstNU.LockType = adLockBatchOptimistic
-	rstNU.ActiveConnection = Db_link_orfeo
+        Res = "DOC_MASIVA"
+        Set rstNU = New ADODB.Recordset
+        rstNU.CursorLocation = adUseClient
+        rstNU.CursorType = adOpenForwardOnly
+        rstNU.LockType = adLockBatchOptimistic
+        rstNU.ActiveConnection = Db_link_orfeo
 
-	If usuario = "" Then
-		usuario = "USER"
-	End If
+        If usuario = "" Then
+                usuario = "USER"
+        End If
 
-	SQL = ""
-	SQL = SQL & " SELECT " & vbCrLf
-	SQL = SQL & " 	REPLACE " & vbCrLf
-	SQL = SQL & " 		( " & vbCrLf
-	SQL = SQL & " 			REPLACE(REPLACE(UPPER(SUBSTR('DOC_MASIVA_' || '" & usuario & "',1,29)),':',''),'\','_') " & vbCrLf
-	SQL = SQL & " 			,'.','_' " & vbCrLf
-	SQL = SQL & " 		) USR_DOC_MASIV " & vbCrLf
-	SQL = SQL & " FROM	DUAL " & vbCrLf
+        SQL = ""
+        SQL = SQL & " SELECT " & vbCrLf
+        SQL = SQL & "   REPLACE " & vbCrLf
+        SQL = SQL & "           ( " & vbCrLf
+        SQL = SQL & "                   REPLACE(REPLACE(UPPER(SUBSTR('DOC_MASIVA_' || '" & usuario & "',1,29)),':',''),'\','_') " & vbCrLf
+        SQL = SQL & "                   ,'.','_' " & vbCrLf
+        SQL = SQL & "           ) USR_DOC_MASIV " & vbCrLf
+        SQL = SQL & " FROM      DUAL " & vbCrLf
 
-	rstNU.Open SQL
-	If Not rstNU.EOF Then
-		If rstNU.Fields("USR_DOC_MASIV") <> "" Then
-			res = rstNU.Fields("USR_DOC_MASIV")
-		End If
-	End If
-	
+        rstNU.Open SQL
+        If Not rstNU.EOF Then
+                If rstNU.Fields("USR_DOC_MASIV") <> "" Then
+                        Res = rstNU.Fields("USR_DOC_MASIV")
+                End If
+        End If
+        
 catch:
-	rstNU.Close
+        rstNU.Close
     Set rstNU = Nothing
-	
-	obtener_nombre_usuario = res
+        
+        obtener_nombre_usuario = Res
 End Function
-Function GetAllXLSheetNames_UNIQUE( _
+Function GetAllXLSheetNames_MASIVE( _
               ByVal ExcelFile As String, _
               Optional ByVal HasRow1FieldNames As Boolean = True _
               ) As Collection
-	'Make sure you have reference set to Microsoft
-	'ActiveX Data Objects 2.X Library (if not default)
-	'and Microsoft ADO Ext. 2.X for DDL and Security
+        'Make sure you have reference set to Microsoft
+        'ActiveX Data Objects 2.X Library (if not default)
+        'and Microsoft ADO Ext. 2.X for DDL and Security
 
-	Dim oConn As ADODB.Connection   '
-	Dim cat As ADOX.Catalog   '
-	Dim tbl As ADOX.Table
-	Dim rs As New ADODB.Recordset
-	Dim myCollection As New Collection
+        Dim oConn As ADODB.Connection   '
+        Dim cat As ADOX.Catalog   '
+        Dim tbl As ADOX.Table
+        Dim rs As New ADODB.Recordset
+        Dim myCollection As New Collection
 
-	'Open the Excel File
-	Set oConn = New ADODB.Connection
-	Set cat = New ADOX.Catalog
+        'Open the Excel File
+        Set oConn = New ADODB.Connection
+        Set cat = New ADOX.Catalog
 
-	'Use
-	oConn.Open	"Provider=Microsoft.Jet.OLEDB.4.0;" & _
-				"Data Source=" & ExcelFile & ";" & _
-				"Extended Properties=""Excel 8.0;HDR=YES;IMEX=1;" & _
-				IIf(HasRow1FieldNames, "YES", "NO") & ";"""
-	Set cat.ActiveConnection = oConn
-	
-	For Each tbl In cat.Tables
-		'you could also stick some code here to work with
-		'the sheet directly hence the import of Header YES/NO    Next
-		myCollection.Add tbl.Name
-	Next
-	
-	Set rs = Nothing
-	Set tbl = Nothing
-	Set cat = Nothing
-	oConn.Close
-	Set oConn = Nothing
-	Set GetAllXLSheetNames_UNIQUE = myCollection
-	Set myCollection = Nothing
+        'Use
+        oConn.Open "Provider=Microsoft.Jet.OLEDB.4.0;" & _
+                                "Data Source=" & ExcelFile & ";" & _
+                                "Extended Properties=""Excel 8.0;HDR=YES;IMEX=1;" & _
+                                IIf(HasRow1FieldNames, "YES", "NO") & ";"""
+        Set cat.ActiveConnection = oConn
+        
+        For Each tbl In cat.Tables
+                'you could also stick some code here to work with
+                'the sheet directly hence the import of Header YES/NO    Next
+                myCollection.Add tbl.Name
+        Next
+        
+        Set rs = Nothing
+        Set tbl = Nothing
+        Set cat = Nothing
+        oConn.Close
+        Set oConn = Nothing
+        Set GetAllXLSheetNames_MASIVE = myCollection
+        Set myCollection = Nothing
 End Function
-Private Function obtener_cedis_x_remitente(ByVal num_client As String, ByVal disclef As String, ByRef allclave_ori As Integer) As String
-	Dim SQL As String
-	Dim res as String
-	Dim rs As New ADODB.Recordset
-	On Error GoTo catch
+Public Function obtener_cedis_x_remitente(ByVal num_client As String, ByVal disclef As String, ByRef allclave_ori As Integer) As String
+        Dim SQL As String
+        Dim Res As String
+        Dim rs As New ADODB.Recordset
+        On Error GoTo catch
 
-	SQL = ""
-	res = ""
-	Set rs = New ADODB.Recordset
-	rs.CursorLocation = adUseClient
-	rs.CursorType = adOpenForwardOnly
-	rs.LockType = adLockBatchOptimistic
-	rs.ActiveConnection = Db_link_orfeo
+        SQL = ""
+        Res = ""
+        Set rs = New ADODB.Recordset
+        rs.CursorLocation = adUseClient
+        rs.CursorType = adOpenForwardOnly
+        rs.LockType = adLockBatchOptimistic
+        rs.ActiveConnection = Db_link_orfeo
 
-	SQL = SQL & " SELECT	DISCLEF DISCLEF, " & vbCrLf
-	SQL = SQL & " 			(SELECT	DER_ALLCLAVE " & vbCrLf
-	SQL = SQL & " 			 FROM	EDESTINOS_POR_RUTA " & vbCrLf
-	SQL = SQL & " 			 WHERE	DER_VILCLEF	=	DISVILLE " & vbCrLf
-	SQL = SQL & " 			 	AND	DER_ALLCLAVE	IS NOT	NULL " & vbCrLf
-	SQL = SQL & " 			 	AND	ROWNUM	= 1) ALLCLAVE_ORI " & vbCrLf
-	SQL = SQL & " FROM	EDISTRIBUTEUR " & vbCrLf
-	SQL = SQL & " WHERE	DISCLEF		=	'" & Replace(disclef, "'", "''") & "' " & vbCrLf
-	SQL = SQL & " 	AND	DISCLIENT	=	'" & Replace(num_client, "'", "''") & "' " & vbCrLf
+        SQL = SQL & " SELECT    DISCLEF DISCLEF, " & vbCrLf
+        SQL = SQL & "                   (SELECT DER_ALLCLAVE " & vbCrLf
+        SQL = SQL & "                    FROM   EDESTINOS_POR_RUTA " & vbCrLf
+        SQL = SQL & "                    WHERE  DER_VILCLEF     =       DISVILLE " & vbCrLf
+        SQL = SQL & "                           AND     DER_ALLCLAVE    IS NOT  NULL " & vbCrLf
+        SQL = SQL & "                           AND     ROWNUM  = 1) ALLCLAVE_ORI " & vbCrLf
+        SQL = SQL & " FROM      EDISTRIBUTEUR " & vbCrLf
+        SQL = SQL & " WHERE     DISCLEF         =       '" & Replace(disclef, "'", "''") & "' " & vbCrLf
+        SQL = SQL & "   AND     DISCLIENT       =       '" & Replace(num_client, "'", "''") & "' " & vbCrLf
 
-	rs.Open SQL
-	If rs.EOF Then
-		res =	"- remitente inexistente:" & _
-				" id: " & disclef & vbCrLf & vbCrLf
-	Else
-		res = "ok"
-		disclef = rs.Fields("DISCLEF")
-		allclave_ori = rs.Fields("ALLCLAVE_ORI")
+        rs.Open SQL
+        If rs.EOF Then
+                Res = "- remitente inexistente:" & _
+                                " id: " & disclef & vbCrLf & vbCrLf
+        Else
+                Res = "ok"
+                disclef = rs.Fields("DISCLEF")
+                allclave_ori = rs.Fields("ALLCLAVE_ORI")
     End If
 
 catch:
     rs.Close
     Set rs = Nothing
-	obtener_cedis_x_remitente = res
+        obtener_cedis_x_remitente = Res
 End Function
 Private Function obtener_nombre_x_cliente(ByVal num_client As String) As String
     Dim NombreCliente As String
     Dim SQL_Nombre As String
     Dim rs_nombre As New ADODB.Recordset
-	On Error GoTo catch
+        On Error GoTo catch
     
     Set rs_nombre = New ADODB.Recordset
     rs_nombre.CursorLocation = adUseClient
@@ -2076,383 +2081,383 @@ catch:
     
     obtener_nombre_x_cliente = NombreCliente
 End Function
-Private Function registrar_segundos_envios(ByVal NUI As String, ByVal num_client As String, ByVal usuario As String) As Boolean
-	Dim result As Boolean
-	Dim SQL_seg_env As String
-	Dim rs_seg_env As New ADODB.Recordset
-	Dim choclave_segundos_envios As String
-	On Error GoTo catch
-	
-	result = false
-	SQL_seg_env = ""
-	choclave_segundos_envios = "-1"
-	
-	Set rs_seg_env = New ADODB.Recordset
+Function registrar_segundos_envios(ByVal nui As String, ByVal num_client As String, ByVal usuario As String) As Boolean
+        Dim result As Boolean
+        Dim SQL_seg_env As String
+        Dim rs_seg_env As New ADODB.Recordset
+        Dim choclave_segundos_envios As String
+        On Error GoTo catch
+        
+        result = False
+        SQL_seg_env = ""
+        choclave_segundos_envios = "-1"
+        
+        Set rs_seg_env = New ADODB.Recordset
     rs_seg_env.CursorLocation = adUseClient
     rs_seg_env.CursorType = adOpenForwardOnly
     rs_seg_env.LockType = adLockBatchOptimistic
     rs_seg_env.ActiveConnection = Db_link_orfeo
-	
-	'Buscar la clave del Concepto Correspondiente por Empresa:
-	SQL_seg_env = SQL_seg_env & " SELECT	CHOCLAVE " & vbCrLf
-	SQL_seg_env = SQL_seg_env & " FROM		ECONCEPTOSHOJA " & vbCrLf
-	SQL_seg_env = SQL_seg_env & " WHERE		1 = 1 " & vbCrLf
-	SQL_seg_env = SQL_seg_env & "	AND		CHOTIPOIE		=	'I' " & vbCrLf
-	SQL_seg_env = SQL_seg_env & "	AND		CHONUMERO		=	517 " & vbCrLf
-	SQL_seg_env = SQL_seg_env & "	AND		CHO_EMPCLAVE	=	'" & obtener_clave_empresa(num_client) & "' " & vbCrLf
+        
+        'Buscar la clave del Concepto Correspondiente por Empresa:
+        SQL_seg_env = SQL_seg_env & " SELECT    CHOCLAVE " & vbCrLf
+        SQL_seg_env = SQL_seg_env & " FROM              ECONCEPTOSHOJA " & vbCrLf
+        SQL_seg_env = SQL_seg_env & " WHERE             1 = 1 " & vbCrLf
+        SQL_seg_env = SQL_seg_env & "   AND             CHOTIPOIE               =       'I' " & vbCrLf
+        SQL_seg_env = SQL_seg_env & "   AND             CHONUMERO               =       517 " & vbCrLf
+        SQL_seg_env = SQL_seg_env & "   AND             CHO_EMPCLAVE    =       '" & obtener_clave_empresa(num_client) & "' " & vbCrLf
 
-	rs_seg_env.Open SQL_seg_env
-	If Not rs_seg_env.EOF Then
-		choclave_segundos_envios = rs_seg_env.Fields("CHOCLAVE")
-	End If
-	rs_seg_env.Close
-	
-	If choclave_segundos_envios <> "-1" Then
-		'Buscar que al cliente le corresponda este concepto:
-		SQL_seg_env = ""
-		SQL_seg_env = SQL_seg_env & " SELECT LIG.LIG_CLICLEF CLIENTE " & vbCrLf
-		SQL_seg_env = SQL_seg_env & " 	,CLI.CLINOM " & vbCrLf
-		SQL_seg_env = SQL_seg_env & " 	,CHO.CHONUMERO " & vbCrLf
-		SQL_seg_env = SQL_seg_env & " 	,CHO.CHONOMBRE " & vbCrLf
-		SQL_seg_env = SQL_seg_env & " 	,CHO2.CHONUMERO " & vbCrLf
-		SQL_seg_env = SQL_seg_env & " 	,CHO2.CHONOMBRE " & vbCrLf
-		SQL_seg_env = SQL_seg_env & " FROM	ELIGA_TARIFAS LIG " & vbCrLf
-		SQL_seg_env = SQL_seg_env & " 	JOIN	ECONCEPTOSHOJA CHO " & vbCrLf
-		SQL_seg_env = SQL_seg_env & " 		ON	CHO.CHOCLAVE	=	LIG.LIG_CHOCLAVE_APLICA " & vbCrLf
-		SQL_seg_env = SQL_seg_env & " 	JOIN	ECONCEPTOSHOJA CHO2 " & vbCrLf
-		SQL_seg_env = SQL_seg_env & " 		ON	CHO2.CHOCLAVE	=	LIG.LIG_CHOCLAVE " & vbCrLf
-		SQL_seg_env = SQL_seg_env & " 	JOIN	ECLIENT CLI " & vbCrLf
-		SQL_seg_env = SQL_seg_env & " 		ON	CLI.CLICLEF		=	LIG.LIG_CLICLEF " & vbCrLf
-		SQL_seg_env = SQL_seg_env & " WHERE	LIG.LIG_CLICLEF		=	'" & num_client & "' " & vbCrLf
-		SQL_seg_env = SQL_seg_env & " 	AND	CHO2.CHONUMERO		IN	(517) " & vbCrLf
+        rs_seg_env.Open SQL_seg_env
+        If Not rs_seg_env.EOF Then
+                choclave_segundos_envios = rs_seg_env.Fields("CHOCLAVE")
+        End If
+        rs_seg_env.Close
+        
+        If choclave_segundos_envios <> "-1" Then
+                'Buscar que al cliente le corresponda este concepto:
+                SQL_seg_env = ""
+                SQL_seg_env = SQL_seg_env & " SELECT LIG.LIG_CLICLEF CLIENTE " & vbCrLf
+                SQL_seg_env = SQL_seg_env & "   ,CLI.CLINOM " & vbCrLf
+                SQL_seg_env = SQL_seg_env & "   ,CHO.CHONUMERO " & vbCrLf
+                SQL_seg_env = SQL_seg_env & "   ,CHO.CHONOMBRE " & vbCrLf
+                SQL_seg_env = SQL_seg_env & "   ,CHO2.CHONUMERO " & vbCrLf
+                SQL_seg_env = SQL_seg_env & "   ,CHO2.CHONOMBRE " & vbCrLf
+                SQL_seg_env = SQL_seg_env & " FROM      ELIGA_TARIFAS LIG " & vbCrLf
+                SQL_seg_env = SQL_seg_env & "   JOIN    ECONCEPTOSHOJA CHO " & vbCrLf
+                SQL_seg_env = SQL_seg_env & "           ON      CHO.CHOCLAVE    =       LIG.LIG_CHOCLAVE_APLICA " & vbCrLf
+                SQL_seg_env = SQL_seg_env & "   JOIN    ECONCEPTOSHOJA CHO2 " & vbCrLf
+                SQL_seg_env = SQL_seg_env & "           ON      CHO2.CHOCLAVE   =       LIG.LIG_CHOCLAVE " & vbCrLf
+                SQL_seg_env = SQL_seg_env & "   JOIN    ECLIENT CLI " & vbCrLf
+                SQL_seg_env = SQL_seg_env & "           ON      CLI.CLICLEF             =       LIG.LIG_CLICLEF " & vbCrLf
+                SQL_seg_env = SQL_seg_env & " WHERE     LIG.LIG_CLICLEF         =       '" & num_client & "' " & vbCrLf
+                SQL_seg_env = SQL_seg_env & "   AND     CHO2.CHONUMERO          IN      (517) " & vbCrLf
 
-		rs_seg_env.Open SQL_seg_env
-		If Not rs_seg_env.EOF Then
-			If num_client = rs_seg_env.Fields("CLIENTE") Then
-				result = True
-			End If
-		End If
-		rs_seg_env.Close
-	
-		If result = True Then
-			'Validar que el NUI no tenga asignado ya el concepto de SEGUNDOS ENVIOS:
-			SQL_seg_env = ""
-			SQL_seg_env = SQL_seg_env & " SELECT	WLCCLAVE ,WLC_WELCLAVE ,WLC_CHOCLAVE " & vbCrLf
-			SQL_seg_env = SQL_seg_env & " FROM	WEB_LTL_CONCEPTOS WLC " & vbCrLf
-			SQL_seg_env = SQL_seg_env & " WHERE	WLC.WLC_WELCLAVE	=	'" & NUI & "' " & vbCrLf
-			SQL_seg_env = SQL_seg_env & " 	AND	WLC.WLC_CHOCLAVE	=	'" & choclave_segundos_envios & "' " & vbCrLf
-			SQL_seg_env = SQL_seg_env & " 	AND	WLC.WLCSTATUS		=	1 " & vbCrLf
-			
-			rs_seg_env.Open SQL_seg_env
-			If Not rs_seg_env.EOF Then
-				If choclave_segundos_envios = rs_seg_env.Fields("WLC_CHOCLAVE") Then
-					result = True
-				End If
-			End If
-			rs_seg_env.Close
-			
-			If result <> True Then
-				'Si no está asignado el concepto de segundos envios, se registra en cero:
-				SQL_seg_env = ""
-				SQL_seg_env = SQL_seg_env & " INSERT INTO	WEB_LTL_CONCEPTOS " & vbCrLf
-				SQL_seg_env = SQL_seg_env & " ( " & vbCrLf
-				SQL_seg_env = SQL_seg_env & " 	 WLCCLAVE " & vbCrLf
-				SQL_seg_env = SQL_seg_env & " 	,WLC_WELCLAVE ,WLC_CHOCLAVE ,WLC_IMPORTE " & vbCrLf
-				SQL_seg_env = SQL_seg_env & " 	,CREATED_BY ,DATE_CREATED ,WLCSTATUS " & vbCrLf
-				SQL_seg_env = SQL_seg_env & " ) " & vbCrLf
-				SQL_seg_env = SQL_seg_env & " 	SELECT	 SEQ_WEB_LTL_CONCEPTOS.nextval " & vbCrLf
-				SQL_seg_env = SQL_seg_env & " 			,'" & NUI & "' ,'" & choclave_segundos_envios & "' ,'" & obtener_monto_x_concepto(NUI,num_client,choclave_segundos_envios) & "' " & vbCrLf
-				SQL_seg_env = SQL_seg_env & " 			,'" & usuario & "' ,SYSDATE ,1 " & vbCrLf
-				SQL_seg_env = SQL_seg_env & " 	FROM	 DUAL " & vbCrLf
+                rs_seg_env.Open SQL_seg_env
+                If Not rs_seg_env.EOF Then
+                        If num_client = rs_seg_env.Fields("CLIENTE") Then
+                                result = True
+                        End If
+                End If
+                rs_seg_env.Close
+        
+                If result = True Then
+                        'Validar que el NUI no tenga asignado ya el concepto de SEGUNDOS ENVIOS:
+                        SQL_seg_env = ""
+                        SQL_seg_env = SQL_seg_env & " SELECT    WLCCLAVE ,WLC_WELCLAVE ,WLC_CHOCLAVE " & vbCrLf
+                        SQL_seg_env = SQL_seg_env & " FROM      WEB_LTL_CONCEPTOS WLC " & vbCrLf
+                        SQL_seg_env = SQL_seg_env & " WHERE     WLC.WLC_WELCLAVE        =       '" & nui & "' " & vbCrLf
+                        SQL_seg_env = SQL_seg_env & "   AND     WLC.WLC_CHOCLAVE        =       '" & choclave_segundos_envios & "' " & vbCrLf
+                        SQL_seg_env = SQL_seg_env & "   AND     WLC.WLCSTATUS           =       1 " & vbCrLf
+                        
+                        rs_seg_env.Open SQL_seg_env
+                        If Not rs_seg_env.EOF Then
+                                If choclave_segundos_envios = rs_seg_env.Fields("WLC_CHOCLAVE") Then
+                                        result = True
+                                End If
+                        End If
+                        rs_seg_env.Close
+                        
+                        If result <> True Then
+                                'Si no está asignado el concepto de segundos envios, se registra en cero:
+                                SQL_seg_env = ""
+                                SQL_seg_env = SQL_seg_env & " INSERT INTO       WEB_LTL_CONCEPTOS " & vbCrLf
+                                SQL_seg_env = SQL_seg_env & " ( " & vbCrLf
+                                SQL_seg_env = SQL_seg_env & "    WLCCLAVE " & vbCrLf
+                                SQL_seg_env = SQL_seg_env & "   ,WLC_WELCLAVE ,WLC_CHOCLAVE ,WLC_IMPORTE " & vbCrLf
+                                SQL_seg_env = SQL_seg_env & "   ,CREATED_BY ,DATE_CREATED ,WLCSTATUS " & vbCrLf
+                                SQL_seg_env = SQL_seg_env & " ) " & vbCrLf
+                                SQL_seg_env = SQL_seg_env & "   SELECT   SEQ_WEB_LTL_CONCEPTOS.nextval " & vbCrLf
+                                SQL_seg_env = SQL_seg_env & "                   ,'" & nui & "' ,'" & choclave_segundos_envios & "' ,'" & obtener_monto_x_concepto(nui, num_client, choclave_segundos_envios) & "' " & vbCrLf
+                                SQL_seg_env = SQL_seg_env & "                   ,'" & usuario & "' ,SYSDATE ,1 " & vbCrLf
+                                SQL_seg_env = SQL_seg_env & "   FROM     DUAL " & vbCrLf
 
-				Db_link_orfeo.Execute SQL_seg_env
-				result = true
-			End If
-		End If
-	End If
-	
+                                Db_link_orfeo.Execute SQL_seg_env
+                                result = True
+                        End If
+                End If
+        End If
+        
 catch:
-	registrar_segundos_envios = result
+        registrar_segundos_envios = result
 End Function
-Private Function registrar_recol_domicilio(ByVal NUI As String, ByVal num_client As String, ByVal usuario As String) As String
-	Dim res As String
-	Dim cant As Double
-	Dim choclave As String
-	Dim SQL_Reco As String
-	Dim rs_reco_domi As New ADODB.Recordset
-	On Error GoTo catch
-	
-	cant = 0
-	res = "-1"
-	SQL_Reco = ""
-	choclave = "-1"
-	
-	Set rs_reco_domi = New ADODB.Recordset
+Function registrar_recol_domicilio(ByVal nui As String, ByVal num_client As String, ByVal usuario As String) As String
+        Dim Res As String
+        Dim cant As Double
+        Dim choclave As String
+        Dim SQL_Reco As String
+        Dim rs_reco_domi As New ADODB.Recordset
+        On Error GoTo catch
+        
+        cant = 0
+        Res = "-1"
+        SQL_Reco = ""
+        choclave = "-1"
+        
+        Set rs_reco_domi = New ADODB.Recordset
     rs_reco_domi.CursorLocation = adUseClient
     rs_reco_domi.CursorType = adOpenForwardOnly
     rs_reco_domi.LockType = adLockBatchOptimistic
     rs_reco_domi.ActiveConnection = Db_link_orfeo
-	
-	'Validar si el Cliente tiene habilitado el concepto:
-	SQL_Reco = SQL_Reco & " SELECT	GET_CHOCLAVE_TRADING(184, WEL.WEL_CLICLEF) CHOCLAVE " & vbCrLf
-	SQL_Reco = SQL_Reco & " FROM	WEB_LTL WEL " & vbCrLf
-	SQL_Reco = SQL_Reco & " WHERE	WEL.WELCLAVE	=	'" & NUI & "' " & vbCrLf
-	
-	rs_reco_domi.Open SQL_Reco
-	If Not rs_reco_domi.EOF Then
-		choclave = rs_reco_domi.Fields("CHOCLAVE")
-	End If
-	rs_reco_domi.Close
-	
-	If choclave <> "" And choclave <> "-1" Then
-		'Validar si el cliente tiene configurada la tarifa de recoleccion:
-		SQL_Reco = ""
-		SQL_Reco = SQL_Reco & " SELECT	COUNT(0) CANTIDAD " & vbCrLf
-		SQL_Reco = SQL_Reco & " FROM	 ECONCEPTOSHOJA " & vbCrLf
-		SQL_Reco = SQL_Reco & " 		,ECLIENT_APLICA_CONCEPTOS " & vbCrLf
-		SQL_Reco = SQL_Reco & " WHERE	 CHOTIPOIE		=	'I' " & vbCrLf
-		SQL_Reco = SQL_Reco & " 	AND	 CHONUMERO		=	184 " & vbCrLf
-		SQL_Reco = SQL_Reco & " 	AND	 CHO_EMPCLAVE	=	GET_EMPRESA_TRADING(" & num_client & ") " & vbCrLf
-		SQL_Reco = SQL_Reco & " 	AND	 CCO_CLICLEF	=	'" & num_client & "' " & vbCrLf
-		SQL_Reco = SQL_Reco & " 	AND	 EXISTS			( " & vbCrLf
-		SQL_Reco = SQL_Reco & " 							SELECT	NULL " & vbCrLf
-		SQL_Reco = SQL_Reco & " 							FROM	EBASES_POR_CONCEPT " & vbCrLf
-		SQL_Reco = SQL_Reco & " 							WHERE	BPCCLAVE		=	CCO_BPCCLAVE " & vbCrLf
-		SQL_Reco = SQL_Reco & " 								AND	BPC_CHOCLAVE	=	CHOCLAVE " & vbCrLf
-		SQL_Reco = SQL_Reco & "						) " & vbCrLf
-		SQL_Reco = SQL_Reco & " 	AND	 NOT EXISTS		( " & vbCrLf
-		SQL_Reco = SQL_Reco & " 							SELECT	NULL " & vbCrLf
-		SQL_Reco = SQL_Reco & " 							FROM	WEB_LTL_CONCEPTOS " & vbCrLf
-		SQL_Reco = SQL_Reco & " 							WHERE	WLC_CHOCLAVE	=	CHOCLAVE " & vbCrLf
-		SQL_Reco = SQL_Reco & " 								AND	WLCSTATUS		=	1 " & vbCrLf
-		SQL_Reco = SQL_Reco & " 								AND	WLC_WELCLAVE	=	'" & NUI & "' " & vbCrLf
-		SQL_Reco = SQL_Reco & " 						) " & vbCrLf
-		
-		rs_reco_domi.Open SQL_Reco
-		If Not rs_reco_domi.EOF Then
-			cant = rs_reco_domi.Fields("CANTIDAD")
-		End If
-		rs_reco_domi.Close
-		
-		If cant > 0 Then
-			'Registrar el concepto en 0 para que se recalcule al momento de imprimir el talon:
-			SQL_Reco = ""
-			SQL_Reco = SQL_Reco & " INSERT INTO	WEB_LTL_CONCEPTOS " & vbCrLf
-			SQL_Reco = SQL_Reco & " 	( " & vbCrLf
-			SQL_Reco = SQL_Reco & " 		 WLCCLAVE, WLC_WELCLAVE, WLC_CHOCLAVE " & vbCrLf
-			SQL_Reco = SQL_Reco & " 		,WLC_IMPORTE, CREATED_BY, DATE_CREATED " & vbCrLf
-			SQL_Reco = SQL_Reco & " 	) " & vbCrLf
-			SQL_Reco = SQL_Reco & " 	VALUES " & vbCrLf
-			SQL_Reco = SQL_Reco & " 		( " & vbCrLf
-			SQL_Reco = SQL_Reco & " 			SEQ_WEB_LTL_CONCEPTOS.nextval, '" & NUI & "', '" & choclave & "'" & vbCrLf
-			SQL_Reco = SQL_Reco & "				,0 ,'" & usuario & "' ,SYSDATE " & vbCrLf
-			SQL_Reco = SQL_Reco & "			) " & vbCrLf
-			
-			Db_link_orfeo.Execute SQL_Reco
-		End If
-	End If
-	
-catch:	
-	obtiene_choclave_recol_domicilio = choclave
+        
+        'Validar si el Cliente tiene habilitado el concepto:
+        SQL_Reco = SQL_Reco & " SELECT  GET_CHOCLAVE_TRADING(184, WEL.WEL_CLICLEF) CHOCLAVE " & vbCrLf
+        SQL_Reco = SQL_Reco & " FROM    WEB_LTL WEL " & vbCrLf
+        SQL_Reco = SQL_Reco & " WHERE   WEL.WELCLAVE    =       '" & nui & "' " & vbCrLf
+        
+        rs_reco_domi.Open SQL_Reco
+        If Not rs_reco_domi.EOF Then
+                choclave = rs_reco_domi.Fields("CHOCLAVE")
+        End If
+        rs_reco_domi.Close
+        
+        If choclave <> "" And choclave <> "-1" Then
+                'Validar si el cliente tiene configurada la tarifa de recoleccion:
+                SQL_Reco = ""
+                SQL_Reco = SQL_Reco & " SELECT  COUNT(0) CANTIDAD " & vbCrLf
+                SQL_Reco = SQL_Reco & " FROM     ECONCEPTOSHOJA " & vbCrLf
+                SQL_Reco = SQL_Reco & "                 ,ECLIENT_APLICA_CONCEPTOS " & vbCrLf
+                SQL_Reco = SQL_Reco & " WHERE    CHOTIPOIE              =       'I' " & vbCrLf
+                SQL_Reco = SQL_Reco & "         AND      CHONUMERO              =       184 " & vbCrLf
+                SQL_Reco = SQL_Reco & "         AND      CHO_EMPCLAVE   =       GET_EMPRESA_TRADING(" & num_client & ") " & vbCrLf
+                SQL_Reco = SQL_Reco & "         AND      CCO_CLICLEF    =       '" & num_client & "' " & vbCrLf
+                SQL_Reco = SQL_Reco & "         AND      EXISTS                 ( " & vbCrLf
+                SQL_Reco = SQL_Reco & "                                                         SELECT  NULL " & vbCrLf
+                SQL_Reco = SQL_Reco & "                                                         FROM    EBASES_POR_CONCEPT " & vbCrLf
+                SQL_Reco = SQL_Reco & "                                                         WHERE   BPCCLAVE                =       CCO_BPCCLAVE " & vbCrLf
+                SQL_Reco = SQL_Reco & "                                                                 AND     BPC_CHOCLAVE    =       CHOCLAVE " & vbCrLf
+                SQL_Reco = SQL_Reco & "                                         ) " & vbCrLf
+                SQL_Reco = SQL_Reco & "         AND      NOT EXISTS             ( " & vbCrLf
+                SQL_Reco = SQL_Reco & "                                                         SELECT  NULL " & vbCrLf
+                SQL_Reco = SQL_Reco & "                                                         FROM    WEB_LTL_CONCEPTOS " & vbCrLf
+                SQL_Reco = SQL_Reco & "                                                         WHERE   WLC_CHOCLAVE    =       CHOCLAVE " & vbCrLf
+                SQL_Reco = SQL_Reco & "                                                                 AND     WLCSTATUS               =       1 " & vbCrLf
+                SQL_Reco = SQL_Reco & "                                                                 AND     WLC_WELCLAVE    =       '" & nui & "' " & vbCrLf
+                SQL_Reco = SQL_Reco & "                                                 ) " & vbCrLf
+                
+                rs_reco_domi.Open SQL_Reco
+                If Not rs_reco_domi.EOF Then
+                        cant = rs_reco_domi.Fields("CANTIDAD")
+                End If
+                rs_reco_domi.Close
+                
+                If cant > 0 Then
+                        'Registrar el concepto en 0 para que se recalcule al momento de imprimir el talon:
+                        SQL_Reco = ""
+                        SQL_Reco = SQL_Reco & " INSERT INTO     WEB_LTL_CONCEPTOS " & vbCrLf
+                        SQL_Reco = SQL_Reco & "         ( " & vbCrLf
+                        SQL_Reco = SQL_Reco & "                  WLCCLAVE, WLC_WELCLAVE, WLC_CHOCLAVE " & vbCrLf
+                        SQL_Reco = SQL_Reco & "                 ,WLC_IMPORTE, CREATED_BY, DATE_CREATED " & vbCrLf
+                        SQL_Reco = SQL_Reco & "         ) " & vbCrLf
+                        SQL_Reco = SQL_Reco & "         VALUES " & vbCrLf
+                        SQL_Reco = SQL_Reco & "                 ( " & vbCrLf
+                        SQL_Reco = SQL_Reco & "                         SEQ_WEB_LTL_CONCEPTOS.nextval, '" & nui & "', '" & choclave & "'" & vbCrLf
+                        SQL_Reco = SQL_Reco & "                         ,0 ,'" & usuario & "' ,SYSDATE " & vbCrLf
+                        SQL_Reco = SQL_Reco & "                 ) " & vbCrLf
+                        
+                        Db_link_orfeo.Execute SQL_Reco
+                End If
+        End If
+        
+catch:
+        registrar_recol_domicilio = choclave
 End Function
-Private Function obtener_monto_x_concepto(ByVal NUI As String, ByVal num_client As String, choclave) As Double
-	Dim res As Double
-	Dim montoNUI As Double
-	Dim chonumero As String
-	Dim porcentaje As Double
-	Dim SQL_monto_concept As String
-	Dim rs_monto_concept As New ADODB.Recordset
-	On Error GoTo catch
-	
-	res = 0
-	montoNUI = 0
-	porcentaje = 0
-	chonumero = ""
-	
-	Set rs_monto_concept = New ADODB.Recordset
+Private Function obtener_monto_x_concepto(ByVal nui As String, ByVal num_client As String, choclave) As Double
+        Dim Res As Double
+        Dim montoNUI As Double
+        Dim chonumero As String
+        Dim porcentaje As Double
+        Dim SQL_monto_concept As String
+        Dim rs_monto_concept As New ADODB.Recordset
+        On Error GoTo catch
+        
+        Res = 0
+        montoNUI = 0
+        porcentaje = 0
+        chonumero = ""
+        
+        Set rs_monto_concept = New ADODB.Recordset
     rs_monto_concept.CursorLocation = adUseClient
     rs_monto_concept.CursorType = adOpenForwardOnly
     rs_monto_concept.LockType = adLockBatchOptimistic
     rs_monto_concept.ActiveConnection = Db_link_orfeo
-	
-	'Obtener el monto de Distribucion (CHONUMERO => 172)
-	SQL_monto_concept = ""
-	SQL_monto_concept = SQL_monto_concept & " SELECT	 WLC.WLC_IMPORTE IMPORTE ,WLC.WLCCLAVE CLAVE_CONCEPTO ,WLC.WLC_WELCLAVE WELCLAVE ,WLC.WLC_CHOCLAVE CHOCLAVE " & VbCrlf
-	SQL_monto_concept = SQL_monto_concept & " 			,WLC.WLCSTATUS STATUS ,CHO.CHONUMERO CHONUMERO ,WLC.DATE_CREATED FECHA_CREACION " & VbCrlf
-	SQL_monto_concept = SQL_monto_concept & " FROM	 WEB_LTL_CONCEPTOS WLC " & VbCrlf
-	SQL_monto_concept = SQL_monto_concept & " 	INNER	JOIN	ECONCEPTOSHOJA CHO " & VbCrlf
-	SQL_monto_concept = SQL_monto_concept & " 		ON	WLC.WLC_CHOCLAVE	=	CHO.CHOCLAVE " & VbCrlf
-	SQL_monto_concept = SQL_monto_concept & " WHERE	 CHO.CHOTIPOIE			=	'I' " & VbCrlf
-	SQL_monto_concept = SQL_monto_concept & " 	AND	 CHO.CHONUMERO			=	172 /* DISTRIBUCION */ " & VbCrlf
-	SQL_monto_concept = SQL_monto_concept & " 	AND	 WLC.WLC_WELCLAVE		=	'" & NUI & "' " & VbCrlf
-	SQL_monto_concept = SQL_monto_concept & " ORDER	BY	WLC.DATE_CREATED	DESC " & VbCrlf
-	
-	rs_monto_concept.Open SQL_monto_concept
-	If Not rs_monto_concept.EOF Then
-		montoNUI = rs_monto_concept.Fields("IMPORTE")
-	End If
-	rs_monto_concept.Close
-	
-	If montoNUI <= 0 Then
-		SQL_monto_concept = ""
-		SQL_monto_concept = SQL_monto_concept & " SELECT " & VbCrlf
-		SQL_monto_concept = SQL_monto_concept & " 	( " & VbCrlf
-		SQL_monto_concept = SQL_monto_concept & " 		CASE " & VbCrlf
-		SQL_monto_concept = SQL_monto_concept & " 			WHEN	LOGIS.FN_OBTEN_MONTO_DISTRIBUCION(WTS.NUI)	>	0 " & VbCrlf
-		SQL_monto_concept = SQL_monto_concept & " 				THEN	LOGIS.FN_OBTEN_MONTO_DISTRIBUCION(WTS.NUI) " & VbCrlf
-		SQL_monto_concept = SQL_monto_concept & " 			WHEN	NVL(NVL(WTS.IMP_DISTRIBUCION,NVL(WEL.WEL_PRECIO_TOTAL, WEL.WEL_PRECIO_ESTIMADO)),0)	>	0 " & VbCrlf
-		SQL_monto_concept = SQL_monto_concept & " 				THEN	NVL(NVL(WTS.IMP_DISTRIBUCION,NVL(WEL.WEL_PRECIO_TOTAL, WEL.WEL_PRECIO_ESTIMADO)),0) " & VbCrlf
-		SQL_monto_concept = SQL_monto_concept & " 			ELSE " & VbCrlf
-		SQL_monto_concept = SQL_monto_concept & " 				WEL.WELIMPORTE " & VbCrlf
-		SQL_monto_concept = SQL_monto_concept & " 		END " & VbCrlf
-		SQL_monto_concept = SQL_monto_concept & " 	) IMPORTE " & VbCrlf
-		SQL_monto_concept = SQL_monto_concept & " FROM	WEB_LTL WEL " & VbCrlf
-		SQL_monto_concept = SQL_monto_concept & " 	INNER	JOIN	WEB_TRACKING_STAGE WTS " & VbCrlf
-		SQL_monto_concept = SQL_monto_concept & " 		ON	WEL.WELCLAVE	=	WTS.NUI " & VbCrlf
-		SQL_monto_concept = SQL_monto_concept & " WHERE	WEL.WELCLAVE	=	'" & NUI & "' " & VbCrlf
-		
-		rs_monto_concept.Open SQL_monto_concept
-		If Not rs_monto_concept.EOF Then
-			montoNUI = rs_monto_concept.Fields("IMPORTE")
-		End If
-		rs_monto_concept.Close
-	End If
-	
-	'Obtener el CHONUMERO correspondiente a la CHOCLAVE del concepto
-	SQL_monto_concept = ""
-	SQL_monto_concept = SQL_monto_concept & " SELECT	 CHO.CHONUMERO CHONUMERO ,CHO.CHO_EMPCLAVE ,CHO.CHOTIPOIE ,CHO.CHONOMBRE " & VbCrlf
-	SQL_monto_concept = SQL_monto_concept & " 			,WLC.WLCCLAVE ,WLC.WLC_WELCLAVE ,WLC.WLC_CHOCLAVE ,WLC.WLC_IMPORTE ,WLC.DATE_CREATED ,WLC.WLCSTATUS " & VbCrlf
-	SQL_monto_concept = SQL_monto_concept & " FROM	WEB_LTL_CONCEPTOS WLC " & VbCrlf
-	SQL_monto_concept = SQL_monto_concept & " 	INNER	JOIN	ECONCEPTOSHOJA CHO " & VbCrlf
-	SQL_monto_concept = SQL_monto_concept & " 		ON	WLC.WLC_CHOCLAVE	=	CHO.CHOCLAVE " & VbCrlf
-	SQL_monto_concept = SQL_monto_concept & " WHERE	CHO.CHOTIPOIE		=	'I' " & VbCrlf
-	SQL_monto_concept = SQL_monto_concept & " 	AND	WLC.WLC_WELCLAVE	=	'" & NUI & "' " & VbCrlf
-	SQL_monto_concept = SQL_monto_concept & "	AND WLC.WLC_CHOCLAVE	=	'" & choclave & "' " & VbCrlf
-	SQL_monto_concept = SQL_monto_concept & " ORDER	BY	WLC.WLCSTATUS DESC " & VbCrlf
+        
+        'Obtener el monto de Distribucion (CHONUMERO => 172)
+        SQL_monto_concept = ""
+        SQL_monto_concept = SQL_monto_concept & " SELECT         WLC.WLC_IMPORTE IMPORTE ,WLC.WLCCLAVE CLAVE_CONCEPTO ,WLC.WLC_WELCLAVE WELCLAVE ,WLC.WLC_CHOCLAVE CHOCLAVE " & vbCrLf
+        SQL_monto_concept = SQL_monto_concept & "                       ,WLC.WLCSTATUS STATUS ,CHO.CHONUMERO CHONUMERO ,WLC.DATE_CREATED FECHA_CREACION " & vbCrLf
+        SQL_monto_concept = SQL_monto_concept & " FROM   WEB_LTL_CONCEPTOS WLC " & vbCrLf
+        SQL_monto_concept = SQL_monto_concept & "       INNER   JOIN    ECONCEPTOSHOJA CHO " & vbCrLf
+        SQL_monto_concept = SQL_monto_concept & "               ON      WLC.WLC_CHOCLAVE        =       CHO.CHOCLAVE " & vbCrLf
+        SQL_monto_concept = SQL_monto_concept & " WHERE  CHO.CHOTIPOIE                  =       'I' " & vbCrLf
+        SQL_monto_concept = SQL_monto_concept & "       AND      CHO.CHONUMERO                  =       172 /* DISTRIBUCION */ " & vbCrLf
+        SQL_monto_concept = SQL_monto_concept & "       AND      WLC.WLC_WELCLAVE               =       '" & nui & "' " & vbCrLf
+        SQL_monto_concept = SQL_monto_concept & " ORDER BY      WLC.DATE_CREATED        DESC " & vbCrLf
+        
+        rs_monto_concept.Open SQL_monto_concept
+        If Not rs_monto_concept.EOF Then
+                montoNUI = rs_monto_concept.Fields("IMPORTE")
+        End If
+        rs_monto_concept.Close
+        
+        If montoNUI <= 0 Then
+                SQL_monto_concept = ""
+                SQL_monto_concept = SQL_monto_concept & " SELECT " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "       ( " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "               CASE " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "                       WHEN    LOGIS.FN_OBTEN_MONTO_DISTRIBUCION(WTS.NUI)      >       0 " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "                               THEN    LOGIS.FN_OBTEN_MONTO_DISTRIBUCION(WTS.NUI) " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "                       WHEN    NVL(NVL(WTS.IMP_DISTRIBUCION,NVL(WEL.WEL_PRECIO_TOTAL, WEL.WEL_PRECIO_ESTIMADO)),0)     >       0 " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "                               THEN    NVL(NVL(WTS.IMP_DISTRIBUCION,NVL(WEL.WEL_PRECIO_TOTAL, WEL.WEL_PRECIO_ESTIMADO)),0) " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "                       ELSE " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "                               WEL.WELIMPORTE " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "               END " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "       ) IMPORTE " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & " FROM  WEB_LTL WEL " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "       INNER   JOIN    WEB_TRACKING_STAGE WTS " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "               ON      WEL.WELCLAVE    =       WTS.NUI " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & " WHERE WEL.WELCLAVE    =       '" & nui & "' " & vbCrLf
+                
+                rs_monto_concept.Open SQL_monto_concept
+                If Not rs_monto_concept.EOF Then
+                        montoNUI = rs_monto_concept.Fields("IMPORTE")
+                End If
+                rs_monto_concept.Close
+        End If
+        
+        'Obtener el CHONUMERO correspondiente a la CHOCLAVE del concepto
+        SQL_monto_concept = ""
+        SQL_monto_concept = SQL_monto_concept & " SELECT         CHO.CHONUMERO CHONUMERO ,CHO.CHO_EMPCLAVE ,CHO.CHOTIPOIE ,CHO.CHONOMBRE " & vbCrLf
+        SQL_monto_concept = SQL_monto_concept & "                       ,WLC.WLCCLAVE ,WLC.WLC_WELCLAVE ,WLC.WLC_CHOCLAVE ,WLC.WLC_IMPORTE ,WLC.DATE_CREATED ,WLC.WLCSTATUS " & vbCrLf
+        SQL_monto_concept = SQL_monto_concept & " FROM  WEB_LTL_CONCEPTOS WLC " & vbCrLf
+        SQL_monto_concept = SQL_monto_concept & "       INNER   JOIN    ECONCEPTOSHOJA CHO " & vbCrLf
+        SQL_monto_concept = SQL_monto_concept & "               ON      WLC.WLC_CHOCLAVE        =       CHO.CHOCLAVE " & vbCrLf
+        SQL_monto_concept = SQL_monto_concept & " WHERE CHO.CHOTIPOIE           =       'I' " & vbCrLf
+        SQL_monto_concept = SQL_monto_concept & "       AND     WLC.WLC_WELCLAVE        =       '" & nui & "' " & vbCrLf
+        SQL_monto_concept = SQL_monto_concept & "       AND WLC.WLC_CHOCLAVE    =       '" & choclave & "' " & vbCrLf
+        SQL_monto_concept = SQL_monto_concept & " ORDER BY      WLC.WLCSTATUS DESC " & vbCrLf
 
-	rs_monto_concept.Open SQL_monto_concept
-	If Not rs_monto_concept.EOF Then
-		chonumero = rs_monto_concept.Fields("CHONUMERO")
-	End If
-	rs_monto_concept.Close
-	
-	'Obtener el Porcentaje por concepto
-	If chonumero <> "" then
-		SQL_monto_concept = ""
-		SQL_monto_concept = SQL_monto_concept & " SELECT " & vbCrLf
-		SQL_monto_concept = SQL_monto_concept & " 	 LIG.LIGPORCENTAJE_APLICA PORCENTAJE " & vbCrLf
-		SQL_monto_concept = SQL_monto_concept & " 	,LIG.LIG_CLICLEF CLIENTE " & vbCrLf
-		SQL_monto_concept = SQL_monto_concept & " 	,CLI.CLINOM NOMBRE_CLIENTE " & vbCrLf
-		SQL_monto_concept = SQL_monto_concept & " 	,CHO.CHONUMERO CHONUMERO " & vbCrLf
-		SQL_monto_concept = SQL_monto_concept & " 	,CHO.CHONOMBRE CHONOMBRE " & vbCrLf
-		SQL_monto_concept = SQL_monto_concept & " 	,CHO2.CHONUMERO CHONUMERO2 " & vbCrLf
-		SQL_monto_concept = SQL_monto_concept & " 	,CHO2.CHONOMBRE CHONOMBRE2 " & vbCrLf
-		SQL_monto_concept = SQL_monto_concept & " FROM	ELIGA_TARIFAS LIG " & vbCrLf
-		SQL_monto_concept = SQL_monto_concept & " 	JOIN	ECONCEPTOSHOJA CHO " & vbCrLf
-		SQL_monto_concept = SQL_monto_concept & " 		ON	CHO.CHOCLAVE	=	LIG.LIG_CHOCLAVE_APLICA " & vbCrLf
-		SQL_monto_concept = SQL_monto_concept & " 	JOIN	ECONCEPTOSHOJA CHO2 " & vbCrLf
-		SQL_monto_concept = SQL_monto_concept & " 		ON	CHO2.CHOCLAVE	=	LIG.LIG_CHOCLAVE " & vbCrLf
-		SQL_monto_concept = SQL_monto_concept & " 	JOIN	ECLIENT CLI " & vbCrLf
-		SQL_monto_concept = SQL_monto_concept & " 		ON	CLI.CLICLEF		=	LIG.LIG_CLICLEF " & vbCrLf
-		SQL_monto_concept = SQL_monto_concept & " WHERE	CHO2.CHONUMERO		=	'" & chonumero & "' " & vbCrLf
-		SQL_monto_concept = SQL_monto_concept & " 	AND	LIG.LIG_CLICLEF		=	'" & Session("array_client")(2,0) & "' " & vbCrLf
-		
-		rs_monto_concept.Open SQL_monto_concept
-		If Not rs_monto_concept.EOF Then
-			porcentaje = rs_monto_concept.Fields("PORCENTAJE")
-		End If
-		rs_monto_concept.Close
-	End If
-	
-	'Calcular el Monto del Concepto multiplicando el Monto de Distribucion por el Porcentaje
-	If porcentaje <> 0 Then
-		res = montoNUI * (porcentaje/100)
-	End If
-	
+        rs_monto_concept.Open SQL_monto_concept
+        If Not rs_monto_concept.EOF Then
+                chonumero = rs_monto_concept.Fields("CHONUMERO")
+        End If
+        rs_monto_concept.Close
+        
+        'Obtener el Porcentaje por concepto
+        If chonumero <> "" Then
+                SQL_monto_concept = ""
+                SQL_monto_concept = SQL_monto_concept & " SELECT " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "        LIG.LIGPORCENTAJE_APLICA PORCENTAJE " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "       ,LIG.LIG_CLICLEF CLIENTE " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "       ,CLI.CLINOM NOMBRE_CLIENTE " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "       ,CHO.CHONUMERO CHONUMERO " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "       ,CHO.CHONOMBRE CHONOMBRE " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "       ,CHO2.CHONUMERO CHONUMERO2 " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "       ,CHO2.CHONOMBRE CHONOMBRE2 " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & " FROM  ELIGA_TARIFAS LIG " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "       JOIN    ECONCEPTOSHOJA CHO " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "               ON      CHO.CHOCLAVE    =       LIG.LIG_CHOCLAVE_APLICA " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "       JOIN    ECONCEPTOSHOJA CHO2 " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "               ON      CHO2.CHOCLAVE   =       LIG.LIG_CHOCLAVE " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "       JOIN    ECLIENT CLI " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "               ON      CLI.CLICLEF             =       LIG.LIG_CLICLEF " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & " WHERE CHO2.CHONUMERO          =       '" & chonumero & "' " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "       AND     LIG.LIG_CLICLEF         =       '" & Session("array_client")(2, 0) & "' " & vbCrLf
+                
+                rs_monto_concept.Open SQL_monto_concept
+                If Not rs_monto_concept.EOF Then
+                        porcentaje = rs_monto_concept.Fields("PORCENTAJE")
+                End If
+                rs_monto_concept.Close
+        End If
+        
+        'Calcular el Monto del Concepto multiplicando el Monto de Distribucion por el Porcentaje
+        If porcentaje <> 0 Then
+                Res = montoNUI * (porcentaje / 100)
+        End If
+        
 catch:
-	obtener_monto_x_concepto = res
+        obtener_monto_x_concepto = Res
 End Function
 Function borrar_id_cron(ByVal id_cron) As Boolean
-	On Error GoTo catch
-	Dim SQL As String
-	Dim res as Boolean
-	
-	SQL = "DELETE FROM REP_DETALLE_REPORTE WHERE ID_CRON = '" & id_cron & "'"
-	Db_link_orfeo.Execute SQL
+        On Error GoTo catch
+        Dim SQL As String
+        Dim Res As Boolean
+        
+        SQL = "DELETE FROM REP_DETALLE_REPORTE WHERE ID_CRON = '" & id_cron & "'"
+        Db_link_orfeo.Execute SQL
 catch:
-	If err.Number <> 0 Then
-		res = False
-	Else
-		res = True
-	End If
-	
-	borrar_id_cron = res
+        If Err.Number <> 0 Then
+                Res = False
+        Else
+                Res = True
+        End If
+        
+        borrar_id_cron = Res
 End Function
 Function notifica_error(ByVal num_client As String, ByVal correo_electronico As String, ByVal Archivo As String, ByVal Errores As String)
-	On Error GoTo catch
-	jmail.From = mail_From
-	jmail.FromName = mail_FromName
-	jmail.ClearRecipients
+        On Error GoTo catch
+        jmail.From = mail_From
+        jmail.FromName = mail_FromName
+        jmail.ClearRecipients
 
-	jmail.AddRecipientBCC mail_grupo_error(0)
-	'jmail.AddRecipient "cargamasiva_smo@logis.com.mx"
+        jmail.AddRecipientBCC mail_grupo_error(0)
+        'jmail.AddRecipient "cargamasiva_smo@logis.com.mx"
 
-	For i = 0 To UBound(Split(Replace(correo_electronico, ",", ";"), ";"))
-		jmail.AddRecipient Trim(Split(Replace(correo_electronico, ",", ";"), ";")(i))
-	Next
-	
-	jmail.subject = "Error carga de archivo web " & Split(Archivo, "\")(UBound(Split(Archivo, "\"))) & "(" & obtener_nombre_x_cliente(num_client) & ")"
-	jmail.body = "Hola, se detectaron errores al cargar el archivo " & Split(Archivo, "\")(UBound(Split(Archivo, "\"))) & ", favor de revisar cada uno de ellos y volver a cargar el archivo." & vbCrLf & vbCrLf & Errores
-	
-	If FSO.FileExists(Archivo) Then
-		jmail.AddAttachment Archivo
-	End If
-	
-	jmail.Send mail_server
-	
-	If FSO.FileExists(Archivo) Then
-		FSO.DeleteFile (Archivo)
-	End If
+        For i = 0 To UBound(Split(Replace(correo_electronico, ",", ";"), ";"))
+                jmail.AddRecipient Trim(Split(Replace(correo_electronico, ",", ";"), ";")(i))
+        Next
+        
+        jmail.subject = "Error carga de archivo web " & Split(Archivo, "\")(UBound(Split(Archivo, "\"))) & "(" & obtener_nombre_x_cliente(num_client) & ")"
+        jmail.body = "Hola, se detectaron errores al cargar el archivo " & Split(Archivo, "\")(UBound(Split(Archivo, "\"))) & ", favor de revisar cada uno de ellos y volver a cargar el archivo." & vbCrLf & vbCrLf & Errores
+        
+        If FSO.FileExists(Archivo) Then
+                jmail.AddAttachment Archivo
+        End If
+        
+        jmail.Send mail_server
+        
+        If FSO.FileExists(Archivo) Then
+                FSO.DeleteFile (Archivo)
+        End If
 
 catch:
 End Function
 Function notifica_exito(ByVal num_client As String, ByVal correo_electronico As String, ByVal Archivo As String, ByVal cantidad_nuis As Double, ByVal lista_nuis As String)
-	On Error GoTo catch
-	jmail.From = mail_From
-	jmail.FromName = mail_FromName
-	jmail.ClearRecipients
+        On Error GoTo catch
+        jmail.From = mail_From
+        jmail.FromName = mail_FromName
+        jmail.ClearRecipients
 
-	jmail.AddRecipientBCC mail_grupo_error(0)
-	'jmail.AddRecipient "cargamasiva_smo@logis.com.mx"
+        jmail.AddRecipientBCC mail_grupo_error(0)
+        'jmail.AddRecipient "cargamasiva_smo@logis.com.mx"
 
-	For i = 0 To UBound(Split(Replace(correo_electronico, ",", ";"), ";"))
-		jmail.AddRecipient Trim(Split(Replace(correo_electronico, ",", ";"), ";")(i))
-	Next
-	
-	jmail.subject = "Exito carga de archivo web " & Split(Archivo, "\")(UBound(Split(Archivo, "\"))) & "(" & obtener_nombre_x_cliente(num_client) & ")"
-	jmail.body = "Hola, se cargo exitosamente el archivo " & Split(Archivo, "\")(UBound(Split(Archivo, "\"))) & ". " & vbCrLf & vbCrLf
-	
-	If cantidad_nuis = 1 Then
-		jmail.body = jmail.body & "	- Se registro un NUI. " & vbCrLf & vbCrLf
-	ElseIf cantidad_nuis > 1 Then
-		jmail.body = jmail.body & "	- Se registraron en total " & cantidad_nuis & " NUIs. " & vbCrLf & vbCrLf
-	End If
-	
-	If lista_nuis <> "" Then
-		jmail.body = jmail.body & lista_nuis & vbCrLf & vbCrLf
-	End If
-	
-	jmail.body = jmail.body & vbCrLf & "Saludos."
-	
-	If FSO.FileExists(Archivo) Then
-		jmail.AddAttachment Archivo
-	End If
-	
-	jmail.Send mail_server
-	
-	If FSO.FileExists(Archivo) Then
-		FSO.DeleteFile (Archivo)
-	End If
+        For i = 0 To UBound(Split(Replace(correo_electronico, ",", ";"), ";"))
+                jmail.AddRecipient Trim(Split(Replace(correo_electronico, ",", ";"), ";")(i))
+        Next
+        
+        jmail.subject = "Exito carga de archivo web " & Split(Archivo, "\")(UBound(Split(Archivo, "\"))) & "(" & obtener_nombre_x_cliente(num_client) & ")"
+        jmail.body = "Hola, se cargo exitosamente el archivo " & Split(Archivo, "\")(UBound(Split(Archivo, "\"))) & ". " & vbCrLf & vbCrLf
+        
+        If cantidad_nuis = 1 Then
+                jmail.body = jmail.body & "     - Se registro un NUI. " & vbCrLf & vbCrLf
+        ElseIf cantidad_nuis > 1 Then
+                jmail.body = jmail.body & "     - Se registraron en total " & cantidad_nuis & " NUIs. " & vbCrLf & vbCrLf
+        End If
+        
+        If lista_nuis <> "" Then
+                jmail.body = jmail.body & lista_nuis & vbCrLf & vbCrLf
+        End If
+        
+        jmail.body = jmail.body & vbCrLf & "Saludos."
+        
+        If FSO.FileExists(Archivo) Then
+                jmail.AddAttachment Archivo
+        End If
+        
+        jmail.Send mail_server
+        
+        If FSO.FileExists(Archivo) Then
+                FSO.DeleteFile (Archivo)
+        End If
 
 catch:
 End Function
