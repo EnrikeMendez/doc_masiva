@@ -2360,7 +2360,7 @@ Private Function obtener_monto_x_concepto(ByVal nui As String, ByVal num_client 
                 SQL_monto_concept = SQL_monto_concept & "       JOIN    ECLIENT CLI " & vbCrLf
                 SQL_monto_concept = SQL_monto_concept & "               ON      CLI.CLICLEF             =       LIG.LIG_CLICLEF " & vbCrLf
                 SQL_monto_concept = SQL_monto_concept & " WHERE CHO2.CHONUMERO          =       '" & chonumero & "' " & vbCrLf
-                SQL_monto_concept = SQL_monto_concept & "       AND     LIG.LIG_CLICLEF         =       '" & Session("array_client")(2, 0) & "' " & vbCrLf
+                SQL_monto_concept = SQL_monto_concept & "       AND     LIG.LIG_CLICLEF         =       '" & num_client & "' " & vbCrLf
                 
                 rs_monto_concept.Open SQL_monto_concept
                 If Not rs_monto_concept.EOF Then

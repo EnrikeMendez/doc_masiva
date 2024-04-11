@@ -239,7 +239,7 @@ Sub doc_masiva_sin_fact(Archivo As String, cliente As String, correo_electronico
                 oRS.Close
                 Call log_SQL("doc_masiva_sin_fact", "termina documentacion", cliente)
                 
-                Call notifica_exito(cliente, correo_electronico, Archivo, cant_nuis, lst_NUIs_insertados)
+                Call notifica_exito(cliente, correo_electronico, Archivo, cant_nuis + 1, lst_NUIs_insertados)
                 borrar_id_cron (idCron)
         End If
 catch:
