@@ -2400,7 +2400,7 @@ Function notifica_error(ByVal num_client As String, ByVal correo_electronico As 
         jmail.ClearRecipients
 
         jmail.AddRecipientBCC mail_grupo_error(0)
-        'jmail.AddRecipient "cargamasiva_smo@logis.com.mx"
+        jmail.AddRecipient "cargamasiva_smo@logis.com.mx"
 
         For i = 0 To UBound(Split(Replace(correo_electronico, ",", ";"), ";"))
                 jmail.AddRecipient Trim(Split(Replace(correo_electronico, ",", ";"), ";")(i))
@@ -2428,7 +2428,7 @@ Function notifica_exito(ByVal num_client As String, ByVal correo_electronico As 
         jmail.ClearRecipients
 
         jmail.AddRecipientBCC mail_grupo_error(0)
-        'jmail.AddRecipient "cargamasiva_smo@logis.com.mx"
+        jmail.AddRecipient "cargamasiva_smo@logis.com.mx"
 
         For i = 0 To UBound(Split(Replace(correo_electronico, ",", ";"), ";"))
                 jmail.AddRecipient Trim(Split(Replace(correo_electronico, ",", ";"), ";")(i))
@@ -2461,3 +2461,282 @@ Function notifica_exito(ByVal num_client As String, ByVal correo_electronico As 
 
 catch:
 End Function
+Function registrar_tracking_stage_doc(ByVal nui As String, ByVal usuario As String) As String
+	Dim Res As String
+	Dim SQL_wts As String
+	Dim rs_wts As New ADODB.Recordset
+	On Error GoTo catch
+	
+	Res = "-1"
+	SQL_wts = ""
+        
+	Set rs_wts = New ADODB.Recordset
+	rs_wts.CursorLocation = adUseClient
+	rs_wts.CursorType = adOpenForwardOnly
+	rs_wts.LockType = adLockBatchOptimistic
+	rs_wts.ActiveConnection = Db_link_orfeo
+	
+	'Registrar usuario y fecha de documentacion por NUI:
+	SQL_wts = SQL_wts & " UPDATE	 WEB_TRACKING_STAGE " & vbCrLf
+	SQL_wts = SQL_wts & " 	SET	 USR_DOC				=	'" & usuario & "' " & vbCrLf
+	SQL_wts = SQL_wts & " 		,FECHA_DOCUMENTACION	=	SYSDATE " & vbCrLf
+	SQL_wts = SQL_wts & " WHERE	 NUI					=	'" & iNUI & "' " & vbCrLf
+	
+	Db_link_orfeo.Execute SQL_wts
+	Res = "ok"
+        
+catch:
+	rs_wts = Nothing
+	registrar_tracking_stage_doc = Res
+End Function
+Function registrar_tracking_stage_can(ByVal nui As String, ByVal usuario As String) As String
+	Dim Res As String
+	Dim SQL_wts As String
+	Dim rs_wts As New ADODB.Recordset
+	On Error GoTo catch
+	
+	Res = "-1"
+	SQL_wts = ""
+        
+	Set rs_wts = New ADODB.Recordset
+	rs_wts.CursorLocation = adUseClient
+	rs_wts.CursorType = adOpenForwardOnly
+	rs_wts.LockType = adLockBatchOptimistic
+	rs_wts.ActiveConnection = Db_link_orfeo
+	
+	'Registrar usuario y fecha de documentacion por NUI:
+	SQL_wts = SQL_wts & " UPDATE	 WEB_TRACKING_STAGE " & vbCrLf
+	SQL_wts = SQL_wts & " 	SET	 USR_CAN			=	'CAN_" & usuario & "' " & vbCrLf
+	SQL_wts = SQL_wts & " 		,FECHA_CANCELACION	=	SYSDATE " & vbCrLf
+	SQL_wts = SQL_wts & " WHERE	 NUI				=	'" & iNUI & "' " & vbCrLf
+	
+	Db_link_orfeo.Execute SQL_wts
+	Res = "ok"
+        
+catch:
+	rs_wts = Nothing
+	registrar_tracking_stage_can = Res
+End Function
+Function registrar_tarimas(ByVal iNUI As String, ByVal usuario As String, i_Tarimas As Double, i_BultosConstitutivos As Double) As String
+	Dim Res As String
+	Dim SQL_tar As String
+	On Error GoTo catch
+	
+	Res = "-1"
+	SQL_tar = ""
+	
+	'Registrar Tarimas y Bultos constitutivos por Tarima al NUI:
+	SQL_tar = SQL_tar & " INSERT INTO	TB_LOGIS_WPALETA_LTL " & vbCrLf
+	SQL_tar = SQL_tar & " 	( " & vbCrLf
+	SQL_tar = SQL_tar & " 		 WPLCLAVE ,WPL_WELCLAVE " & vbCrLf
+	SQL_tar = SQL_tar & " 		,WPL_IDENTICAS ,WPL_TPACLAVE " & vbCrLf
+	SQL_tar = SQL_tar & " 		,WPLLARGO ,WPLANCHO ,WPLALTO " & vbCrLf
+	SQL_tar = SQL_tar & " 		,WPL_CDAD_EMPAQUES_X_BULTO ,WPL_BULTO_TPACLAVE " & vbCrLf
+	SQL_tar = SQL_tar & " 		,CREATED_BY ,DATE_CREATED " & vbCrLf
+	SQL_tar = SQL_tar & " 	) " & vbCrLf
+	SQL_tar = SQL_tar & " 	VALUES " & vbCrLf
+	SQL_tar = SQL_tar & " 		( " & vbCrLf
+	SQL_tar = SQL_tar & "			 SEQ_WPALETA_LTL.nextval ,'" & iNUI & "' " & vbCrLf
+	SQL_tar = SQL_tar & "			,'" & i_Tarimas & "' ,1 " & vbCrLf
+	SQL_tar = SQL_tar & "			,0 ,0 ,0 " & vbCrLf
+	SQL_tar = SQL_tar & "			, '" & i_BultosConstitutivos & "' ,9 " & vbCrLf
+	SQL_tar = SQL_tar & "			, '" & usuario & "' ,SYSDATE " & vbCrLf
+	SQL_tar = SQL_tar & " 		) " & vbCrLf
+	
+	Db_link_orfeo.Execute SQL_tar
+	Res = "ok"
+        
+catch:
+	registrar_tarimas = Res
+End Function
+Function registrar_bultos_granel(ByVal iNUI As String, ByVal usuario As String, i_BultosGranel As Double) As String
+	Dim Res As String
+	Dim SQL_tar As String
+	On Error GoTo catch
+	
+	Res = "-1"
+	SQL_tar = ""
+	
+	'Registrar Bultos Sueltos al NUI:
+	SQL = SQL & " INSERT INTO       TB_LOGIS_WPALETA_LTL " & vbCrLf
+	SQL = SQL & " 	( " & vbCrLf
+	SQL = SQL & " 		 WPLCLAVE ,WPL_WELCLAVE " & vbCrLf
+	SQL = SQL & " 		,WPL_IDENTICAS ,WPL_TPACLAVE " & vbCrLf
+	SQL = SQL & " 		,WPLLARGO ,WPLANCHO ,WPLALTO " & vbCrLf
+	SQL = SQL & " 		,CREATED_BY ,DATE_CREATED " & vbCrLf
+	SQL = SQL & " 	) " & vbCrLf
+	SQL = SQL & " 	VALUES " & vbCrLf
+	SQL = SQL & " 	( " & vbCrLf
+	SQL = SQL & " 		 SEQ_WPALETA_LTL.nextval ,'" & iNUI & "' " & vbCrLf
+	SQL = SQL & " 		,'" & i_BultosGranel & "' ,9 " & vbCrLf
+	SQL = SQL & " 		,0 ,0 ,0 " & vbCrLf
+	SQL = SQL & " 		, '" & usuario & "' ,SYSDATE " & vbCrLf
+	SQL = SQL & " 	) " & vbCrLf
+	
+	Db_link_orfeo.Execute SQL_tar
+	Res = "ok"
+        
+catch:
+	registrar_bultos_granel = Res
+End Function
+Function documentar_nuevo_nui(cliente As String, usuario As String, s_CondicionesEntrega As String, s_Observaciones As String, s_Referencia As String, mi_disclef As String, ccl_clave As String, _
+							  die_clave As String, i_ValorMercancia As Double, allclave_ori As Integer, allclave_dest As Integer, i_BultosTotales As Double, i_Tarimas As Double, i_BultosConstitutivos As Double, i_BultosGranel As Double) As Double
+	'Ciclos determinantes: Documentar valores acumulados y reiniciar variables:
+	Dim iNUI As Double
+	Dim SQL As String
+	
+	On Error GoTo catch
+	iNUI = -1
+	SQL = ""
+	
+	s_CondicionesEntrega = obtener_prepagado_por_cobrar(cliente)
+	s_Observaciones = s_Observaciones & " " & obtener_dice_contener(cliente)
+	iNUI = obtener_nui_disponible(cliente)
+	
+	Debug.Print "Inicia documentacion del NUI: " & iNUI & vbCrLf
+	
+	SQL = SQL & " UPDATE	WEB_LTL " & vbCrLf
+	SQL = SQL & " 	SET " & vbCrLf
+	SQL = SQL & " 		 WELSTATUS				=	1 " & vbCrLf
+	SQL = SQL & " 		,DATE_CREATED			=	SYSDATE " & vbCrLf
+	SQL = SQL & " 		,MODIFIED_BY			=	'" & usuario & "' " & vbCrLf
+	SQL = SQL & " 		,WEL_COLLECT_PREPAID	=	'" & s_CondicionesEntrega & "' " & vbCrLf
+	SQL = SQL & " 		,WELOBSERVACION			=	SUBSTR('" & s_Observaciones & "',1,1999) " & vbCrLf
+	
+	If s_Referencia = "" Then
+		SQL = SQL & "		,WELFACTURA		=	'_PENDIENTE_' " & vbCrLf
+	Else
+		SQL = SQL & "		,WELFACTURA		=	'" & s_Referencia & "' " & vbCrLf
+	End If
+	If mi_disclef <> "" Then
+		SQL = SQL & "		,WEL_DISCLEF	=	'" & mi_disclef & "' " & vbCrLf
+	End If
+	If ccl_clave <> "" Then
+		SQL = SQL & "		,WEL_CCLCLAVE	=	'" & ccl_clave & "' " & vbCrLf
+	End If
+	If die_clave <> "" Then
+		SQL = SQL & "		,WEL_DIECLAVE	=	'" & die_clave & "' " & vbCrLf
+	End If
+	
+	If allclave_ori <> -1 Then
+		SQL = SQL & "		,WEL_ALLCLAVE_ORI	=	'" & allclave_ori & "' " & vbCrLf
+	End If
+	If allclave_dest <> -1 Then
+		SQL = SQL & "		,WEL_ALLCLAVE_DEST	=	'" & allclave_dest & "' " & vbCrLf
+	End If
+	
+	If i_ValorMercancia > 0 Then
+		SQL = SQL & "		,WELIMPORTE		=	'" & i_ValorMercancia & "' " & vbCrLf
+	Else
+		SQL = SQL & "		,WELIMPORTE		=	0 " & vbCrLf
+	End If
+	If i_BultosTotales > 0 Then
+		SQL = SQL & "		,WEL_CDAD_BULTOS	=	'" & i_BultosTotales & "' " & vbCrLf
+	Else
+		SQL = SQL & "		,WEL_CDAD_BULTOS	=	0 " & vbCrLf
+	End If
+	If i_Tarimas > 0 Then
+		SQL = SQL & "		,WEL_CDAD_TARIMAS	=	'" & i_Tarimas & "' " & vbCrLf
+	Else
+		SQL = SQL & "		,WEL_CDAD_TARIMAS	=	0 " & vbCrLf
+	End If
+	If i_BultosConstitutivos > 0 Then
+		SQL = SQL & "		,WEL_CAJAS_TARIMAS	=	'" & i_BultosConstitutivos & "' " & vbCrLf
+	Else
+		SQL = SQL & "		,WEL_CAJAS_TARIMAS	=	0 " & vbCrLf
+	End If
+	If i_BultosGranel > 0 Then
+		SQL = SQL & "		,WELCDAD_CAJAS		=	'" & i_BultosGranel & "' " & vbCrLf
+	Else
+		SQL = SQL & "		,WELCDAD_CAJAS		=	0 " & vbCrLf
+	End If
+
+	SQL = SQL & " WHERE	WELCLAVE	=	'" & iNUI & "' " & vbCrLf
+	Db_link_orfeo.Execute SQL
+	
+	
+	Call registrar_tracking_stage_doc(iNUI,usuario)
+	
+	If i_Tarimas > 0 Then
+		Call registrar_tarimas(iNUI, usuario, i_Tarimas, i_BultosConstitutivos)
+	End If
+	
+	If i_BultosGranel > 0 Then
+		Call registrar_bultos_granel(iNUI,usuario,i_BultosGranel)
+	End If
+	
+	Call CHECK_VALID_LTL(iNUI)
+	Call registrar_segundos_envios(iNUI, cliente, usuario)
+	Call registrar_recol_domicilio(iNUI, cliente, usuario)
+	Call registrar_bitacora(cliente, "DOC_MASIVA-SIN_FACTURA", iNUI, "LTL", usuario)
+	
+	Debug.Print "Termina documentacion del NUI: " & iNUI & vbCrLf
+	
+catch:
+	documentar_nuevo_nui = iNUI
+End Function
+Function registrar_bitacora(ByVal cliente As String, ByVal modulo As String, ByVal nui As Double, ByVal tipo As String, ByVal usuario As String) As Boolean
+	Dim SQL As String
+	Dim Total As Double
+	Dim ip_site As String
+	Dim rst_bita As New ADODB.Recordset
+	Dim res As Boolean
+	On Error GoTo catch
+	
+	SQL = ""
+	Total = 0
+	ip_site = "192.168.100.4"
+	res = false
+	Set rst_bita = New ADODB.Recordset
+	rst_bita.CursorLocation = adUseClient
+	rst_bita.CursorType = adOpenForwardOnly
+	rst_bita.LockType = adLockBatchOptimistic
+	rst_bita.ActiveConnection = Db_link_orfeo
+	
+	If cliente <> "" And modulo <> "" And nui > 0 And tipo <> "" And usuario <> "" Then
+		SQL = SQL & " SELECT	COUNT(*) CANTIDAD " & vbCrLf
+		SQL = SQL & " FROM	WEB_BITA_DOCUMENTA " & vbCrLf
+		SQL = SQL & " WHERE	WBD_CLICLEF		=	'" & cliente & "' " & vbCrLf
+		SQL = SQL & " 	AND	WBD_USUARIO		=	'" & usuario & "' " & vbCrLf
+		SQL = SQL & " 	AND	WBD_MODULO		=	'" & modulo & "' " & vbCrLf
+		SQL = SQL & " 	-- limitado a un registro por minuto para cada cliente, ya que se trata de cargas masivas y se puede saturar la tabla (validar si es funcional): " & vbCrLf
+		SQL = SQL & " 	AND	TO_CHAR(WBD_FECHA,'DD/MM/YYYY HH24MI')	=	TO_CHAR(SYSDATE,'DD/MM/YYYY HH24MI') " & vbCrLf
+		
+		rst_bita.Open SQL_monto_concept
+		If Not rst_bita.EOF Then
+			Total = rst_bita.Fields("CANTIDAD")
+		End If
+		rst_bita.Close
+		
+		If Total <= 0 Then
+			SQL = ""
+			SQL = SQL & " INSERT INTO	WEB_BITA_DOCUMENTA " & vbCrLf
+			SQL = SQL & " ( " & vbCrLf
+			SQL = SQL & " 	 WBD_ID_EVENTO " & vbCrLf
+			SQL = SQL & " 	,WBD_FECHA " & vbCrLf
+			SQL = SQL & " 	,WBD_CLICLEF " & vbCrLf
+			SQL = SQL & " 	,WBD_MODULO " & vbCrLf
+			SQL = SQL & " 	,WBD_USUARIO " & vbCrLf
+			SQL = SQL & " 	,NUI " & vbCrLf
+			SQL = SQL & " 	,TIPO " & vbCrLf
+			SQL = SQL & " 	,WBD_IP_SERVIDOR " & vbCrLf
+			SQL = SQL & " ) " & vbCrLf
+			SQL = SQL & " 	VALUES " & vbCrLf
+			SQL = SQL & " 	( " & vbCrLf
+			SQL = SQL & " 		(SELECT MAX(NVL(WBD_ID_EVENTO,0)) + 1 FROM WEB_BITA_DOCUMENTA) " & vbCrLf
+			SQL = SQL & " 		,SYSDATE " & vbCrLf
+			SQL = SQL & " 		,'" & cliente & "' " & vbCrLf
+			SQL = SQL & " 		,'" & modulo & "' " & vbCrLf
+			SQL = SQL & " 		,'" & usuario & "' " & vbCrLf
+			SQL = SQL & " 		,'" & nui & "' " & vbCrLf
+			SQL = SQL & " 		,'" & tipo & "' " & vbCrLf
+			SQL = SQL & " 		,'" & ip_site & "' " & vbCrLf
+			SQL = SQL & " 	) " & vbCrLf
+			
+			Db_link_orfeo.Execute SQL_Reco
+			res = True
+		End If
+	End If
+catch:
+	registrar_bitacora = res
+end function 
